@@ -29,76 +29,24 @@ RawModel* Loader::LoadToVAO(const vector<vec3>& positions, const vector<vec2>& t
 	return  new RawModel(vao, (int)indexes.size());
 }
 
-int Loader::LoadTexture(const char * fileName)
+vector<TexturedModel*> Loader::LoadToFromFile(char * fileName)
 {
+	vector<TexturedModel*> models;
+	Assimp::Importer importer;
+	const aiScene* scene = importer.ReadFile(fileName,
+		aiProcess_Triangulate | aiProcess_FlipUVs);
 
-	GLuint textureID;
+	if (!scene)
+	{
+		printf("Mesh %s load failed\n", fileName);
 
-	//image format
-	FREE_IMAGE_FORMAT fif = FIF_UNKNOWN;
-	//pointer to the image, once loaded
-	FIBITMAP *dib(0);
-	//pointer to the image data
-	BYTE* bits(0);
-	//image width and height
-	unsigned int width(0), height(0);
-	//OpenGL's image ID to map to
+	}
+	this->ProcessNode(scene->mRootNode, scene, models);
 
-
-	GLuint gl_texID;
-	//check the file signature and deduce its format
-	fif = FreeImage_GetFileType(fileName, 0);
-	//if still unknown, try to guess the file format from the file extension
-	if (fif == FIF_UNKNOWN)
-		fif = FreeImage_GetFIFFromFilename(fileName);
-	//if still unkown, return failure
-	if (fif == FIF_UNKNOWN)
-		return false;
-
-	//check that the plugin has reading capabilities and load the file
-	if (FreeImage_FIFSupportsReading(fif))
-		dib = FreeImage_Load(fif, fileName);
-
-	//if the image failed to load, return failure
-	if (!dib)
-		return false;
-
-	//retrieve the image data
-	bits = FreeImage_GetBits(dib);
-	//get the image width and height
-	width = FreeImage_GetWidth(dib);
-	height = FreeImage_GetHeight(dib);
-	//if this somehow one of these failed (they shouldn't), return failure
-	if ((bits == 0) || (width == 0) || (height == 0))
-		return false;
-
-	glGenTextures(1, &textureID);
-
-	// "Bind" the newly created texture : all future texture functions will modify this texture
-	glBindTexture(GL_TEXTURE_2D, textureID);
-
-	// Nice trilinear filtering.
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-
-
-	// Read the file, call glTexImage2D with the right parameters
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height,
-		0, GL_BGR, GL_UNSIGNED_BYTE, bits);
-	glGenerateMipmap(GL_TEXTURE_2D);
-
-	glBindTexture(GL_TEXTURE_2D, 0);
-
-	//Free FreeImage's copy of the data
-	FreeImage_Unload(dib);
-
-	textures.push_back(textureID);
-
-	// Return the ID of the texture we just created
-	return textureID;
+	return models;
 }
+
+
 
 int Loader::CreateVAO()
 {
@@ -150,6 +98,158 @@ void Loader::UnbindVAO()
 {
 	glBindVertexArray(0);
 }
+
+void Loader::ProcessNode(aiNode* node, const aiScene* scene, vector<TexturedModel*>& models)
+{
+	// Process each mesh located at the current node
+	for (GLuint i = 0; i < node->mNumMeshes; i++)
+	{
+		// The node object only contains indices to index the actual objects in the scene. 
+		// The scene contains all the data, node is just to keep stuff organized (like relations between nodes).
+		aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
+		this->ProcessMesh(mesh, scene, models);
+	}
+	// After we've processed all of the meshes (if any) we then recursively process each of the children nodes
+	for (GLuint i = 0; i < node->mNumChildren; i++)
+	{
+		this->ProcessNode(node->mChildren[i], scene, models);
+	}
+
+}
+
+void Loader::ProcessMesh(aiMesh* mesh, const aiScene* scene, vector<TexturedModel*>& models)
+{
+	// Data to fill
+	vector<vec3> vertices;
+	vector<vec2> uv;
+	vector<vec3> normals;
+	vector<int> indices;
+	vector<Texture*> textures;
+
+	// Walk through each of the mesh's vertices
+	for (GLuint i = 0; i < mesh->mNumVertices; i++)
+	{
+
+		vec3 vector; // We declare a placeholder vector since assimp uses its own vector class that doesn't directly convert to glm's vec3 class so we transfer the data to this placeholder glm::vec3 first.
+					 // Positions
+		vector.x = mesh->mVertices[i].x;
+		vector.y = mesh->mVertices[i].y;
+		vector.z = mesh->mVertices[i].z;
+
+		vertices.push_back(vector);
+
+		vec3 normal;
+		normal.x = mesh->mNormals[i].x;
+		normal.y = mesh->mNormals[i].y;
+		normal.z = mesh->mNormals[i].z;
+
+		normals.push_back(normal);
+
+		// Texture Coordinates
+		vec2 vec;
+		if (mesh->mTextureCoords[0]) // Does the mesh contain texture coordinates?
+		{
+
+			// A vertex can contain up to 8 different texture coordinates. We thus make the assumption that we won't 
+			// use models where a vertex can have multiple texture coordinates so we always take the first set (0).
+			vec.x = mesh->mTextureCoords[0][i].x;
+			vec.y = mesh->mTextureCoords[0][i].y;
+
+		}
+		else {
+			vec.x = 0.0f;
+			vec.y = 0.0f;
+		}
+
+
+		uv.push_back(vec);
+	}
+	// Now wak through each of the mesh's faces (a face is a mesh its triangle) and retrieve the corresponding vertex indices.
+	for (GLuint i = 0; i < mesh->mNumFaces; i++)
+	{
+		aiFace face = mesh->mFaces[i];
+		// Retrieve all indices of the face and store them in the indices vector
+		for (GLuint j = 0; j < face.mNumIndices; j++)
+			indices.push_back(face.mIndices[j]);
+	}
+	// Process materials
+
+	vec4 diffuseColor;
+	vec4 specularColor;
+	vec4 ambientColor;
+	float shininess = 0.0;
+	if (mesh->mMaterialIndex >= 0)
+	{
+		aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
+
+		aiString Path;
+
+		aiColor4D diffuse(0.f, 0.f, 0.f, 1.0f);
+
+
+		//aiColor3D color(0.f, 0.f, 0.f);
+		//material->Get(AI_MATKEY_COLOR_DIFFUSE, color);
+
+		if (AI_SUCCESS == aiGetMaterialColor(material, AI_MATKEY_COLOR_DIFFUSE, &diffuse))
+		{
+			diffuseColor.r = diffuse.r;
+			diffuseColor.g = diffuse.g;
+			diffuseColor.b = diffuse.b;
+			diffuseColor.a = diffuse.a;
+		}
+
+		aiColor4D specular;
+		if (AI_SUCCESS == aiGetMaterialColor(material, AI_MATKEY_COLOR_SPECULAR, &specular))
+		{
+			specularColor.r = specular.r;
+			specularColor.g = specular.g;
+			specularColor.b = specular.b;
+			specularColor.a = specular.a;
+		}
+
+		aiColor4D ambient;
+		if (AI_SUCCESS == aiGetMaterialColor(material, AI_MATKEY_COLOR_AMBIENT, &ambient))
+		{
+			ambientColor.r = ambient.r;
+			ambientColor.g = ambient.g;
+			ambientColor.b = ambient.b;
+			ambientColor.a = ambient.a;
+		}
+
+
+		unsigned int max;
+		aiGetMaterialFloatArray(material, AI_MATKEY_SHININESS, &shininess, &max);
+
+
+		if (material->GetTexture(aiTextureType_DIFFUSE, 0, &Path) == AI_SUCCESS)
+		{
+			std::string path(Path.data);
+			Texture* texture = new Texture(GL_TEXTURE_2D, "../Resources/Textures/" + path);
+			texture->type = "diffuse";
+			textures.push_back(texture);
+
+		}
+
+		if (material->GetTexture(aiTextureType_SPECULAR, 0, &Path) == AI_SUCCESS)
+		{
+			std::string path(Path.data);
+			Texture* texture = new Texture(GL_TEXTURE_2D, "../Resources/Textures/" + path);
+			texture->type = "specular";
+			textures.push_back(texture);
+
+		}
+	}
+
+	RawModel* rawModel = LoadToVAO(vertices, uv, normals, indices);
+	TexturedModel* model = new TexturedModel(rawModel, textures);
+	model->SpecularColor = specularColor;
+	model->DiffuseColor = diffuseColor;
+	model->AmbientColor = ambientColor;
+	model->Shininess = shininess;
+
+	models.push_back(model);
+}
+
 
 
 void Loader::CleanUp()

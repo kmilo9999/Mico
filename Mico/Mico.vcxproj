@@ -105,13 +105,13 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(SolutionDir)\include;$(SolutionDir)\lib\glad\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\include;$(SolutionDir)\lib\glad\include\;$(SolutionDir)include\assimp\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>opengl32.lib;glfw3.lib;glfw3dll.lib;FreeImage.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)lib\glfw\lib-vc2015\;$(SolutionDir)lib\FreeImage;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>opengl32.lib;glfw3.lib;glfw3dll.lib;FreeImage.lib;assimp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)lib\glfw\lib-vc2015\;$(SolutionDir)lib\FreeImage;$(SolutionDir)lib\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -150,19 +150,25 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\lib\glad\src\glad.c" />
+    <ClCompile Include="BoundingSphere.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Entity.cpp" />
-    <ClCompile Include="GameObject.cpp" />
+    <ClCompile Include="EntityManager.cpp" />
+    <ClCompile Include="GLError.cpp" />
+    <ClCompile Include="GlobalLight.cpp" />
     <ClCompile Include="Loader.cpp" />
+    <ClCompile Include="Material.cpp" />
+    <ClCompile Include="Math.cpp" />
     <ClCompile Include="Mico.cpp" />
-    <ClCompile Include="ModelTexture.cpp" />
+    <ClCompile Include="SelectableBoundingVolumen.cpp" />
+    <ClCompile Include="Terrain.cpp" />
+    <ClCompile Include="Texture.cpp" />
     <ClCompile Include="RawModel.cpp" />
     <ClCompile Include="GraphicsSystem.cpp" />
     <ClCompile Include="InputHandler.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="ShaderProgram.cpp" />
-    <ClCompile Include="StaticShader.cpp" />
     <ClCompile Include="TexturedModel.cpp" />
     <ClCompile Include="WindowHandler.cpp" />
     <ClCompile Include="WindowSystem.cpp" />
@@ -170,29 +176,39 @@
   <ItemGroup>
     <ClInclude Include="..\lib\glad\include\glad\glad.h" />
     <ClInclude Include="..\lib\glad\include\KHR\khrplatform.h" />
+    <ClInclude Include="BoundingSphere.h" />
+    <ClInclude Include="BoundingVolumen.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Entity.h" />
-    <ClInclude Include="GameObject.h" />
+    <ClInclude Include="EntityManager.h" />
+    <ClInclude Include="GLError.h" />
+    <ClInclude Include="GlobalLight.h" />
     <ClInclude Include="Loader.h" />
+    <ClInclude Include="Material.h" />
+    <ClInclude Include="Math.h" />
     <ClInclude Include="Mico.h" />
-    <ClInclude Include="ModelTexture.h" />
+    <ClInclude Include="SelectableBoundingVolumen.h" />
+    <ClInclude Include="Terrain.h" />
+    <ClInclude Include="Texture.h" />
     <ClInclude Include="RawModel.h" />
     <ClInclude Include="Event.h" />
     <ClInclude Include="GraphicsSystem.h" />
     <ClInclude Include="InputHandler.h" />
-    <ClInclude Include="MySignal.h" />
     <ClInclude Include="Observer.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="ShaderProgram.h" />
-    <ClInclude Include="StaticShader.h" />
     <ClInclude Include="System.h" />
     <ClInclude Include="TexturedModel.h" />
     <ClInclude Include="WindowHandler.h" />
     <ClInclude Include="WindowSystem.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="LightModel.fragmentshader" />
+    <None Include="LightModel.vertexshader" />
     <None Include="Simple.fragmentshader" />
     <None Include="Simple.vertexshader" />
+    <None Include="Terrain.fragmentshader" />
+    <None Include="Terrain.vertexshader" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

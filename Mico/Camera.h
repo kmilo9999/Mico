@@ -21,7 +21,7 @@ class Camera:public Observer
 	};
 
 public:
-	Camera(vec3 Postion = vec3(0.0f, 0.0f, 0.0f), float xAngle = 0.0f, float yAxis = 0.0f);
+	Camera(vec3 Postion = vec3(0.0f, 0.0f, 0.0f),vec3 front =  vec3(0.0f, 0.0f, -1.0f),vec3 Up = vec3(0.0,1.0,0.0));
 	~Camera();
 	
 	void Move(vec3 dir, float dt);
@@ -36,7 +36,7 @@ public:
 	vec3 up;
 	
 	mat4& GetView();
-	
+	vec3 GetFront();
 	
 	float speed;
 	float mouseSpeed;

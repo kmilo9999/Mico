@@ -35,3 +35,7 @@ private:
 	GLuint width, height;
 };
 
+
+/// Global pointer to the Graphics System.
+extern WindowSystem * WINDOWSYSTEM;
+

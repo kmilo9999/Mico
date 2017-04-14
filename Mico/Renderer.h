@@ -11,7 +11,7 @@ using namespace std;
 class Renderer
 {
 public:
-	Renderer();
+	Renderer(GLFWwindow*);
 	~Renderer();
 	void  PrepareRenderer();
 	void  FinishRenderer();

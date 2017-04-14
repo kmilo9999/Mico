@@ -1,12 +1,13 @@
 #include "Camera.h"
 #include <math.h>
+#include <iostream>
 
-
-Camera::Camera(vec3 Position, float xAngle, float yAngle) :
-	speed(3.0f), mouseSpeed(0.005f), foV(45.0f),inputFlag(MovingFlag::stop),lastMousePosition(0.0f, 0.0f),
-	canMove(false)
+Camera::Camera(vec3 Position,vec3 front, vec3 up) :position(Position),
+	speed(0.1f), mouseSpeed(0.2f), foV(45.0f),inputFlag(MovingFlag::stop),lastMousePosition(0.0f, 0.0f),
+	canMove(false), front(front),up(up)
 {
-	
+	front = normalize(front);
+	up = normalize(up);
 }
 
 Camera::~Camera()
@@ -26,7 +27,7 @@ void Camera::RotateX(float angle)
 
 	rotate(front, angle, Haxis);
 	front = normalize(front);
-	up = normalize(cross(up, front));
+	up = normalize(cross(front, Haxis));
 	
 
 }
@@ -38,29 +39,37 @@ void Camera::RotateY(float angle)
 
 	rotate(front, angle, yAxis);
 	front = normalize(front);
-	up = normalize(cross(up, front));
+	up = normalize(cross(front, Haxis));
 
 }
 
 void Camera::rotate(vec3& vector, float angle, const vec3& axis)
 {
-	float angleRadians = (angle / 2) * (180 / PI);
-	float halfSin = sinf(angleRadians);
-	float halfCos = cosf(angleRadians);
+	quat quat_view(0, vector.x, vector.y, vector.z);
+
+	float angleRadians = (angle) * (PI / 180);
+	float halfSin = sinf(angleRadians /2);
+	float halfCos = cosf(angleRadians / 2);
 	quat rotation(halfCos, axis.x * halfSin, axis.y * halfSin, axis.z * halfSin);
 	quat conjugate = inverse(rotation);
-	quat w = rotation * vector * conjugate;
+	quat q =  rotation * quat_view;
+	q *= conjugate;
 
-	vector.x = w.x;
-	vector.y = w.y;
-	vector.z = w.z;
+	vector.x = q.x;
+	vector.y = q.y;
+	vector.z = q.z;
 
 }
 
 mat4& Camera::GetView()
 {
 	// Camera matrix
-	return glm::lookAt(position, front, up);
+	return glm::lookAt(position, position + front, up);
+}
+
+vec3 Camera::GetFront()
+{
+	return position;
 }
 
 void Camera::onNotify(Event& evt)
@@ -118,12 +127,16 @@ void Camera::onNotify(Event& evt)
 	case Event::MouseMoved:
 		{
 			if (!canMove)
+			{
+				lastMousePosition.x = evt.mouseMove.x;
+				lastMousePosition.y = evt.mouseMove.y;
 				break;
+			}	
 
 			float xAngle = (evt.mouseMove.x - lastMousePosition.x)*mouseSpeed;
 			float yAngle = (evt.mouseMove.y - lastMousePosition.y)*mouseSpeed;
-			RotateX(xAngle);
-			RotateY(yAngle);
+			RotateX(yAngle); // invert the angle because to feel it more natural
+			RotateY(-xAngle);
 			lastMousePosition.x = evt.mouseMove.x;
 			lastMousePosition.y = evt.mouseMove.y;
 		}
@@ -151,7 +164,22 @@ void Camera::onNotify(Event& evt)
 
 void Camera::Update()
 {
-
+	if (inputFlag == MovingFlag::forward)
+	{
+		position += front * speed;
+	}
+	if (inputFlag == MovingFlag::backward)
+	{
+		position -= front * speed;
+	}
+	if (inputFlag == MovingFlag::right)
+	{
+		position += glm::normalize(glm::cross(front, up)) * speed;
+	}
+	if (inputFlag == MovingFlag::left)
+	{
+		position -= glm::normalize(glm::cross(front, up)) * speed;
+	}
 }
 
 

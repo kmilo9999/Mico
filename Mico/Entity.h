@@ -2,6 +2,7 @@
 #include "TexturedModel.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
+#include "BoundingSphere.h"
 
 using namespace glm;
 class Entity
@@ -11,18 +12,23 @@ public:
 	~Entity();
 
 
-	vec3 GetPosition();
-	void SetPosition(vec3 position);
+	virtual vec3 GetPosition();
+	virtual void SetPosition(vec3 position);
 
-	vec3 GetScale();
-	void SetScale(vec3 scale);
+	virtual vec3 GetScale();
+	virtual void SetScale(vec3 scale);
 
-	quat GetOrientation();
-	void SetOrientatio(quat orientation);
+	virtual quat GetOrientation();
+	virtual void SetOrientatio(quat orientation);
 
-private:
+	void SetBoundingVolumen(BoundingVolumen* volumen);
+	BoundingVolumen* GetBoundingVolumen();
+
+
+protected:
 	vec3 Position;
 	quat Orientation;
 	vec3 Scale;
+	BoundingVolumen* boundingVolumen;
 };
 

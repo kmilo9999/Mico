@@ -3,13 +3,19 @@
 #include <fstream>
 #include <vector>
 #include <cassert>
+#include "GLError.h"
+
+ShaderProgram::ShaderProgram():progarmId(0)
+{
+
+}
 
 
-ShaderProgram::ShaderProgram(const char * vertex_filenname, const char * fragment_filename)
+void ShaderProgram::LoadShaders(const char * vertex_filenname, const char * fragment_filename)
 {
 	int vertexShaderID = LoadShader(vertex_filenname, GL_VERTEX_SHADER);
 	int fragmentShaderID = LoadShader(fragment_filename, GL_FRAGMENT_SHADER);
-
+	int IsLinked;
 	// Link the program
 	printf("Linking program\n");
 	
@@ -17,11 +23,22 @@ ShaderProgram::ShaderProgram(const char * vertex_filenname, const char * fragmen
 	glAttachShader(progarmId, vertexShaderID);
 	glAttachShader(progarmId, fragmentShaderID);
 
-	BindAttributes();
+	glBindAttribLocation(progarmId, 0, "vertexPosition");
+	glBindAttribLocation(progarmId, 1, "texCoord");
+	glBindAttribLocation(progarmId, 2, "normals");
 
 	glLinkProgram(progarmId);
 
-	VerifiProgram(progarmId);
+	glGetProgramiv(progarmId, GL_LINK_STATUS, (int *)&IsLinked);
+	if (IsLinked == FALSE)
+	{
+		int maxLength;
+		glGetProgramiv(progarmId, GL_INFO_LOG_LENGTH, &maxLength);
+		std::vector<char> VertexShaderErrorMessage(maxLength + 1);
+		glGetProgramInfoLog(progarmId, maxLength, &maxLength, &VertexShaderErrorMessage[0]);
+		printf("%s\n", &VertexShaderErrorMessage[0]);
+		return;
+	}
 
 	glDetachShader(progarmId, vertexShaderID);
 	glDetachShader(progarmId, fragmentShaderID);
@@ -29,57 +46,87 @@ ShaderProgram::ShaderProgram(const char * vertex_filenname, const char * fragmen
 	glDeleteShader(vertexShaderID);
 	glDeleteShader(fragmentShaderID);
 
-	GetAllUniformLocations();
 
 }
+
 
 ShaderProgram::~ShaderProgram()
 {
 }
 
-inline
+
 void ShaderProgram::start()
 {
+	assert(progarmId != 0 && "Shader program not initalized");
 	glUseProgram(progarmId);
 }
 
-inline
+
 void ShaderProgram::stop()
 {
 	glUseProgram(0);
 }
 
-void ShaderProgram::BindAttribute(int attribute, const char * variableName)
+void ShaderProgram::addUniform(const char* name)
 {
-	glBindAttribLocation(progarmId, attribute, variableName);
-}
-
-int ShaderProgram::GetUniformLocation(const char * variableName)
-{
-	return glGetUniformLocation(progarmId, variableName);
-}
-
-void ShaderProgram::LoadFloat(int location, float value)
-{
-	glUniform1f(location, value);
-}
-
-void ShaderProgram::LoadVector(int location, vec3 value)
-{
-	glUniform3fv(location, 1 , glm::value_ptr(value));
-}
-
-void ShaderProgram::LoadBoolean(int location, bool value)
-{
-	if (value)
-		glUniform1i(location, 1);
+	assert(progarmId != 0 && "Shader program not initalized");
+	int uniformLocation = glGetUniformLocation(progarmId, name);
+	if (uniformLocation != -1/*did not find the uniform*/)
+	{
+		
+		uniforms[name] = uniformLocation;
+	}
 	else
-		glUniform1i(location, 0);
+	{
+		printf("uniform %s not linked in shader!\n", name);
+	}
+
+	
 }
 
-void ShaderProgram::LoadMatrix(int location, mat4 value)
+void ShaderProgram::setUniformi(const char * name, int value)
 {
-	glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(value));
+	glUniform1i(uniforms[name], value);
+	//check_gl_error(name);
+}
+
+void ShaderProgram::setUniformf(const char * name, float value)
+{
+	glUniform1f(uniforms[name], value);
+	//check_gl_error(name);
+}
+
+void ShaderProgram::setUniform(const char * name, vec3 vector)
+{
+	glUniform3f(uniforms[name], vector.x, vector.y, vector.z);
+	//check_gl_error(name);
+}
+
+void ShaderProgram::setUniform(const char * name, vec4 vector)
+{
+	glUniform4f(uniforms[name], vector.x, vector.y, vector.z, vector.w);
+}
+
+void ShaderProgram::setUniform(const char * name, mat4 matrix)
+{
+	//glUniformMatrix4fv(uniforms[name], 1, GL_FALSE, glm::value_ptr(vector));
+	
+	if (!InUse())
+	{
+		start();
+	}
+	if (uniforms.find(name) == uniforms.end())
+	{
+		addUniform(name);
+	}
+	glUseProgram(progarmId);
+	glUniformMatrix4fv(uniforms[name], 1, GL_FALSE, glm::value_ptr(matrix));
+	//check_gl_error();
+}
+
+GLuint ShaderProgram::GetProgramId()
+{
+	return progarmId;
 }
 
 GLuint ShaderProgram::LoadShader(const char * filenname, int type)
@@ -119,12 +166,21 @@ void ShaderProgram::VerifiProgram(GLuint programId)
 	int InfoLogLength;
 	// Check Vertex Shader
 	glGetShaderiv(programId, GL_COMPILE_STATUS, &Result);
-	glGetShaderiv(programId, GL_INFO_LOG_LENGTH, &InfoLogLength);
-	if (InfoLogLength > 0) {
+	
+	if ( Result == FALSE) {
+		glGetShaderiv(programId, GL_INFO_LOG_LENGTH, &InfoLogLength);
 		std::vector<char> VertexShaderErrorMessage(InfoLogLength + 1);
 		glGetShaderInfoLog(programId, InfoLogLength, NULL, &VertexShaderErrorMessage[0]);
 		printf("%s\n", &VertexShaderErrorMessage[0]);
 	}
 
 	assert(Result);
+}
+
+bool ShaderProgram::InUse()
+{
+	GLint currentProgram = 0;
+	glGetIntegerv(GL_CURRENT_PROGRAM, &currentProgram);
+
+	return currentProgram == (GLint)progarmId;
 }

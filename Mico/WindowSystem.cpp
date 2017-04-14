@@ -3,9 +3,11 @@
 #include <cassert>
 #include "Event.h"
 
+WindowSystem * WINDOWSYSTEM = nullptr;
+
 WindowSystem::WindowSystem(int width, int height):width(width), height(height)
 {
-
+	
 }
 
 
@@ -40,6 +42,7 @@ void WindowSystem::Init()
 	glfwSetScrollCallback(window, WindowSystem::ScrollCallback);
 	glfwSetMouseButtonCallback(window, WindowSystem::MouseButtonCallback);
 	glfwSetWindowSizeCallback(window, WindowSystem::WindowsSizeCallback);
+	WINDOWSYSTEM = this;
 }
 
 void WindowSystem::Update()
@@ -73,7 +76,6 @@ vec2 WindowSystem::Getsize()
 
 void WindowSystem::Keycallback(GLFWwindow * window, int key, int scancode, int action, int mode)
 {
-	std::cout << key << std::endl;
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, GL_TRUE);
 
