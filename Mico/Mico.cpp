@@ -7,25 +7,13 @@ Mico* Mico::Instance(0);
 double secsPerFrame = 1 / 60;
 
 
-vector<vec3> vertices{  vec3(0.5f,  0.5f, 0.0f),
-						vec3(0.5f, -0.5f, 0.0f),
-						vec3(-0.5f, -0.5f, 0.0f),
-						vec3(-0.5f,  0.5f, 0.0f) };
 
-vector<int> indexes{ 2,1,0,
-					  0,3,2 };
-
-vector<vec2> textcoor{
-	vec2(1.0f, 1.0f), // Top Right
-	vec2(1.0f, 0.0f), // Bottom Right
-	vec2(0.0f, 0.0f), // Bottom Left
-	vec2(0.0f, 1.0f)  // Top Left 
-};
 
 Mico::Mico():running(true),previous(0.0),steps(0.0)
 {
 	windowSystem = new WindowSystem(800, 600);
 	graphicsSystem = new GraphicsSystem( windowSystem->Getsize());
+	uiSystem = new UISystem();
 }
 
 
@@ -50,13 +38,14 @@ void Mico::Initialize()
 	windowSystem->Init();
 
 	graphicsSystem->Init();
+	uiSystem->Init();
+
 	WindowHandler::GetInstance()->addObserver(graphicsSystem);
 	EntityManager::GetInstance()->Initialize();
 	graphicsSystem->InitScene();
-	//RawModel* rawModel = Loader::GetInstance()->LoadToVAO(vertices, textcoor, vector<vec3>(), indexes);
-	//Texture* targetTtexture = new Texture(GL_TEXTURE_2D, "../Resources/Textures/dragonballzsuper.jpg");
-	//vector<Texture*> myTextures = { targetTtexture };
-	//TexturedModel* myModel = new TexturedModel(rawModel, myTextures);
+	uiSystem->addObserver(graphicsSystem);
+	uiSystem->addObserver(EntityManager::GetInstance());
+	
 
 	//vector<Entity*> targets;
 	//Entity* target = new Entity();
@@ -83,9 +72,13 @@ void Mico::Run()
 		previous = current;
 		steps += elapsed;
 
-		
-		graphicsSystem->InitRender();
+		EntityManager::GetInstance()->UpdateEntities();
+
 		graphicsSystem->Update();
+
+		uiSystem->ImGuiNewFrame();
+		uiSystem->Update();
+
 		graphicsSystem->FinishRender();
 		//while (lag >= secsPerFrame)
 		//{
@@ -99,6 +92,8 @@ void Mico::Run()
 		}
 		
 	}
+
+	uiSystem->ImGuiShutdown();
 }
 
 

@@ -12,11 +12,6 @@ InputHandler::~InputHandler()
 {
 }
 
-void InputHandler::addObserver(Observer * obs)
-{
-	observers.push_back(obs);
-}
-
 InputHandler* InputHandler::GetInstance()
 {
 	if (!instance)
@@ -26,11 +21,5 @@ InputHandler* InputHandler::GetInstance()
 	return instance;
 }
 
-void InputHandler::notify(Event evt)
-{
-	for (Observer* obs : observers)
-	{
-		obs->onNotify(evt);
-	}
-}
+
 

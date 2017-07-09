@@ -10,10 +10,7 @@ Texture::Texture(GLenum TextureTarget, const std::string& filename) :
 
 Texture::~Texture()
 {
-	if (material)
-	{
-		delete material;
-	}
+
 }
 
 int Texture::LoadTexture()
@@ -109,12 +106,3 @@ GLuint Texture::GetTextureId()
 	return texture_id;
 }
 
-void Texture::SetMaterial(Material* material)
-{
-	this->material = material;
-}
-
-Material* Texture::GetMaterial()
-{
-	return material;
-}

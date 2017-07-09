@@ -11,34 +11,36 @@ using namespace glm;
 class TexturedModel
 {
 public:
-	TexturedModel(RawModel* model, vector<Texture*>&  textures);
+	TexturedModel(RawModel* model);
+	TexturedModel(const TexturedModel& other);
+	TexturedModel& operator=(const TexturedModel& other);
+
 	~TexturedModel();
 
 	RawModel* GetModel();
+	RawModel* GetModel() const;
+
 	void SetModel(RawModel* nModel);
 
-	void BindTexture(ShaderProgram& shader);
-	void Bind();
+	void BindTexture(std::vector<Texture*>& textures);
+
+	//used for shadows (for now)
+	void BindTexture(int textureUnit, int textureId);
+	
+
 	void Draw();
+	void DrawNormals();
 	void UnBind();
 
-	void Addtexture(Texture* texture);
 
 	void SetId(string id);
 
 	string GetId();
 	
-	unsigned int NumTextures();
-
-	vec4 DiffuseColor;
-	vec4 SpecularColor;
-	vec4 AmbientColor;
-	float Shininess;
 
 protected:
-	RawModel* model;
+	RawModel* myModel;
 
-	vector<Texture*>  textures;
 	string id;
 
 };

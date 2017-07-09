@@ -1,63 +1,72 @@
 #include "TexturedModel.h"
 
 
-TexturedModel::TexturedModel(RawModel * model, vector<Texture*>&  m_textures): model(model),textures(m_textures)
+TexturedModel::TexturedModel(RawModel * model): myModel(model)
 {
+
+}
+
+TexturedModel::TexturedModel(const TexturedModel & other)
+	: myModel(new RawModel(other.GetModel()->getVao(), other.GetModel()->getVertexCount()))
+{
+	
+}
+
+TexturedModel & TexturedModel::operator=(const TexturedModel & other)
+{
+	// TODO: insert return statement here
+    myModel = new RawModel(other.GetModel()->getVao(), other.GetModel()->getVertexCount());
+	return *this;
 }
 
 TexturedModel::~TexturedModel()
 {
-	delete model;
-	for (size_t i = 0; i < textures.size(); ++i)
-	{
-		delete textures[i];
-	}
+	delete myModel;
 }
 
 RawModel * TexturedModel::GetModel()
 {
-	return this->model;
+	return this->myModel;
+}
+
+RawModel * TexturedModel::GetModel() const
+{
+	return this->myModel;
 }
 
 void TexturedModel::SetModel(RawModel * nModel)
 {
-	this->model = nModel;
+	this->myModel = nModel;
 }
 
-void TexturedModel::BindTexture(ShaderProgram& shader)
+void TexturedModel::BindTexture(std::vector<Texture*>& textures)
 {
 	for (size_t i = 0; i < textures.size(); ++i)
 	{
-		glActiveTexture(GL_TEXTURE0 + i);
-		textures[i]->Bind(GL_TEXTURE0 + i);
-		if (textures[i]->GetMaterial())
-		{
-			shader.setUniform("material.ambient", textures[i]->GetMaterial()->GetAmbient());
-			shader.setUniform("material.diffuse", textures[i]->GetMaterial()->GetDiffuse());
-			shader.setUniform("material.specular", textures[i]->GetMaterial()->GetSpecular());
-			shader.setUniformf("material.shininess", textures[i]->GetMaterial()->GetShinines());
-		}
+		textures[i]->Bind( i);
 	}
-	
-
 }
 
-void TexturedModel::Bind()
+void TexturedModel::BindTexture(int textureUnit, int textureId)
 {
-	for (size_t i = 0; i < textures.size(); ++i)
-	{
-		glActiveTexture(GL_TEXTURE0 + i);
-		textures[i]->Bind(GL_TEXTURE0 + i);
-	}
-
-
+	glActiveTexture(GL_TEXTURE0 + textureUnit);
+	glBindTexture(GL_TEXTURE_2D, textureId);
 }
 
 void TexturedModel::Draw()
 {
-	glBindVertexArray(model->getVao());
-	glDrawElements(GL_TRIANGLES, model->getVertexCount(), GL_UNSIGNED_INT, 0);
+	glBindVertexArray(myModel->getVao());
+	glDrawElements(GL_TRIANGLES, myModel->getVertexCount(), GL_UNSIGNED_INT, 0);
 	glBindVertexArray(0);
+}
+
+void TexturedModel::DrawNormals()
+{
+	//glDisable(GL_DEPTH_TEST);
+	glBindVertexArray(myModel->getNormalsVAO());
+	glDrawArrays(GL_LINES, 0, myModel->getNormalsCount());
+	glBindVertexArray(0);
+	//glEnable(GL_DEPTH_TEST);
 }
 
 void TexturedModel::UnBind()
@@ -67,11 +76,6 @@ void TexturedModel::UnBind()
 	glDisableVertexAttribArray(2);
 	glActiveTexture(0);
 	glBindVertexArray(0);
-}
-
-void TexturedModel::Addtexture(Texture* texture)
-{
-	textures.push_back(texture);
 }
 
 void TexturedModel::SetId(string id)
@@ -84,7 +88,4 @@ string TexturedModel::GetId()
 	return id;
 }
 
-unsigned int TexturedModel::NumTextures()
-{
-	return textures.size();
-}
+

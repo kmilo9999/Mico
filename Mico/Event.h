@@ -11,9 +11,19 @@ class Event {
 		   MouseButtonPressed,
 		   MouseButtonReleased,
 		   MouseMoved,
-		   MouseWheel
+		   MouseWheel,
+		   UI
 	   };
 	   
+	   enum UIEventType
+	   {
+		   ShowNormals,
+		   ChangeModel,
+		   MaterialAmbient,
+		   MaterialDiffuse,
+		   MaterialSpecular
+	   };
+
 	   Event(EventType type) :type(type) {};
 
 	   struct SizeEvent
@@ -44,6 +54,27 @@ class Event {
 		   float	z;
 	   };
 
+	   union UIEventValue
+	   {
+		   bool boolValue;
+		   int modelIndex;
+	   };
+
+
+	   struct UIEvtType
+	   {
+		   UIEventType type;
+		   UIEventValue value;
+		   float ambientColorR;
+		   float ambientColorG;
+		   float ambientColorB;
+		   float diffuseColorR;
+		   float diffuseColorG;
+		   float diffuseColorB;
+		   float specularColorR;
+		   float specularColorG;
+		   float specularColorB;
+	   };
 
 	   EventType type;
 	   
@@ -54,6 +85,10 @@ class Event {
 		   MouseMovementEvent		mouseMove;
 		   MouseClickEvent	mouseButton;
 		   MouseWheelEvent		mouseWheel;
+		   UIEvtType ui;
 	   };
 	   
+	
+	 
+
 };

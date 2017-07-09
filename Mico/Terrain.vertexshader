@@ -9,11 +9,16 @@ uniform mat4 ModelMatrix;
 uniform mat4 ViewMatrix;
 uniform mat4 ProjectionMatrix;
 
-out vec2 text_coord;
+//shadow information
+uniform mat4 ShadowMatrix;
 
+out vec2 text_coord;
+out vec4 shadowCoord;
 
 void main(){
   gl_Position =  ProjectionMatrix * ViewMatrix * ModelMatrix * vec4(vertexPosition,1.0f);
   text_coord = texCoord;
   
+  shadowCoord = ShadowMatrix * ModelMatrix * vec4(vertexPosition,1.0f);
+
 }

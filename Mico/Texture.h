@@ -2,7 +2,6 @@
 #include <glad\glad.h>
 #include <FreeImage\FreeImage.h>
 #include <string>
-#include "Material.h"
 
 class Texture
 {
@@ -18,15 +17,11 @@ public:
 
 	std::string type;
 
-	void SetMaterial(Material* material);
-	Material* GetMaterial();
-
 private:
 
 	int LoadTexture();
 	GLuint texture_id;
 	GLenum m_textureTarget;
 	const char* m_fileName;
-	Material* material;
 };
 

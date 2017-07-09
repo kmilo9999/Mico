@@ -1,11 +1,14 @@
 #pragma once
 #include "TexturedModel.h"
+#include "GraphicsComponent.h"
+#include "ShaderProgram.h"
+#include "Entity.h"
 
 #define TERRAIN_SIZE 40
 #define MAX_HEIGH 40
 
 
-class Terrain
+class Terrain : public Entity
 {
 public:
 
@@ -15,15 +18,16 @@ public:
 	
 	const float GetWidthX();
 	const float GetWidthZ();
-	TexturedModel* GetModel();
+
+	void BindTextures(GraphicsComponent* graphicsCompnent);
+	void Draw(ShaderProgram& shaderProgram);
+	
 
 private:
 
 	float X;
 	float Z;
 	char* HeightMap;
-	TexturedModel* Model;
 	RawModel* GenerateTerrain();
-
 };
 

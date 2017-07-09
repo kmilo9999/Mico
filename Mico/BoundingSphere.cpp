@@ -1,10 +1,12 @@
 #include "BoundingSphere.h"
+#include "Entity.h"
+#include "TransformationComponent.h"
+#include <iostream>
 
-
-
-BoundingSphere::BoundingSphere(vec3 center, float radius): center(center),radius(radius)
+BoundingSphere::BoundingSphere( float radius)
+	:radius(radius)
 {
-
+	ComponentName = "BoundingVolumen";
 }
 
 
@@ -14,11 +16,15 @@ BoundingSphere::~BoundingSphere()
 
 bool BoundingSphere::RayInstersection(vec3 start, vec3 rayDirection)
 {
-	float b = 2 * (rayDirection.x * (start.x - center.x) + 
-		rayDirection.y * (start.y - center.y) + rayDirection.z * (start.z - center.z));
-	float c = start.x * start.x - 2 * start.x * center.x + center.x * center.x
-		+ start.y * start.y - 2 * start.y * center.y + center.y * center.y
-		+ start.z * start.z - 2 * start.z * center.z + center.z * center.z - radius * radius;
+	TransformationComponent* transformation = 
+		dynamic_cast<TransformationComponent*> (myOwner->GetComponent("TransformationComponent"));
+	Position = transformation->GetPosition();
+
+	float b = 2 * (rayDirection.x * (start.x - Position.x) +
+		rayDirection.y * (start.y - Position.y) + rayDirection.z * (start.z - Position.z));
+	float c = start.x * start.x - 2 * start.x * Position.x + Position.x * Position.x
+		+ start.y * start.y - 2 * start.y * Position.y + Position.y * Position.y
+		+ start.z * start.z - 2 * start.z * Position.z + Position.z * Position.z - radius * radius;
 
 	float discr = (b * b - 4 * c);
 	if (discr < 0)
@@ -36,12 +42,14 @@ bool BoundingSphere::RayInstersection(vec3 start, vec3 rayDirection)
 
 vec3 BoundingSphere::GetCenter()
 {
-	return center;
+	TransformationComponent* transformation =
+		dynamic_cast<TransformationComponent*> (myOwner->GetComponent("TransformationComponent"));
+	return transformation->GetPosition();
 }
 
 void BoundingSphere::SetCenter(vec3 n_center)
 {
-	center = n_center;
+	Position = n_center;
 }
 
 float BoundingSphere::GetRadius()
@@ -52,4 +60,22 @@ float BoundingSphere::GetRadius()
 void BoundingSphere::SetRadius(float n_radius)
 {
 	radius = n_radius;
+}
+
+void BoundingSphere::Update()
+{
+	/*TransformationComponent* transformationComponent =
+		dynamic_cast<TransformationComponent*>(myOwner->GetComponent("TransformationComponent"));
+
+	center = transformationComponent->GetPosition();*/
+	
+}
+
+void BoundingSphere::Initialize(Entity* owner)
+{
+	myOwner = owner;
+}
+
+void BoundingSphere::ShutDown()
+{
 }

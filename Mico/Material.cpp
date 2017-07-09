@@ -50,3 +50,13 @@ void Material::SetShinines(float n_shinines)
 {
 	shinines = n_shinines;
 }
+
+void Material::AddTexture(Texture * texture)
+{
+	textures.push_back(texture);
+}
+
+std::vector<Texture*> Material::GetTextures()
+{
+	return textures;
+}

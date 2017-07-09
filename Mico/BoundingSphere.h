@@ -4,7 +4,7 @@
 class BoundingSphere : public SelectableBoundingVolumen
 {
 public:
-	BoundingSphere(vec3 center, float radius);
+	BoundingSphere( float radius);
 	~BoundingSphere();
 
 	bool RayInstersection(vec3 start, vec3 rayDirection);
@@ -14,6 +14,11 @@ public:
 
 	float GetRadius();
 	void SetRadius(float n_radius);
+	
+	virtual void Update();
+
+	virtual void Initialize(Entity* owner);
+	virtual void ShutDown();
 
 private:
 	vec3 center;

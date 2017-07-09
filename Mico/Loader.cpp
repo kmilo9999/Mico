@@ -3,6 +3,11 @@
 Loader* Loader::instance(0);
 
 
+Loader::Loader():myModelFilePath("../Resources/Models/")
+{
+	
+}
+
 Loader * Loader::GetInstance()
 {
 	if (!instance)
@@ -21,7 +26,11 @@ RawModel* Loader::LoadToVAO(const vector<vec3>& positions, const vector<vec2>& t
 	int vao = CreateVAO();
 	StoreDataInAttributeList(0, 3, positions);
 	StoreDataInAttributeList(1, 2, textCoodinates);
-	StoreDataInAttributeList(2, 3, normals);
+	if (!normals.empty())
+	{
+		StoreDataInAttributeList(2, 3, normals);
+	}
+	
 	BindIndicesBuffer(indexes);
 	UnbindVAO();
 
@@ -29,7 +38,7 @@ RawModel* Loader::LoadToVAO(const vector<vec3>& positions, const vector<vec2>& t
 	return  new RawModel(vao, (int)indexes.size());
 }
 
-vector<TexturedModel*> Loader::LoadToFromFile(char * fileName)
+TexturedModel* Loader::LoadToFromFile(const char * fileName)
 {
 	vector<TexturedModel*> models;
 	Assimp::Importer importer;
@@ -39,11 +48,73 @@ vector<TexturedModel*> Loader::LoadToFromFile(char * fileName)
 	if (!scene)
 	{
 		printf("Mesh %s load failed\n", fileName);
-
 	}
 	this->ProcessNode(scene->mRootNode, scene, models);
+	
+	if (!models.empty())
+	{
+		return models[0];
+	}
+	else
+	{
+		return nullptr;
+	}
 
-	return models;
+	
+}
+
+GLuint Loader::ConstructNormalsVectorsVBO(vector<vec3>& vertices, vector<int>& indices, int& size)
+{
+
+	GLuint normal_vao = 0;
+	GLuint normals_vbo = 0;
+	vector<vec3> myNormals;
+	for (int i = 0; i < indices.size(); i+=3)
+	{
+		vec3 vertex1 = vertices[indices[i]];
+		vec3 vertex2 = vertices[indices[i + 1]];
+		vec3 vertex3 = vertices[indices[i + 2]];
+
+		vec3 v1 = vertex2 - vertex1;
+		vec3 v2 = vertex3 - vertex1;
+		vec3 normal = cross(v1, v2);
+
+		vec3 centroid ((vertex1.x + vertex2.x + vertex3.x) / 3
+			, (vertex1.y + vertex2.y + vertex3.y) / 3
+			, (vertex3.z + vertex3.z + vertex3.z) / 3);
+		
+		myNormals.push_back(centroid);
+		myNormals.push_back(centroid + normal * 6.0f);
+	}
+
+	glGenVertexArrays(1, &normal_vao);
+		glGenBuffers(1, &normals_vbo);
+	glBindVertexArray(normal_vao);
+	glBindBuffer(GL_ARRAY_BUFFER, normals_vbo);
+	glBindVertexArray(normals_vbo);
+	glBufferData(
+		GL_ARRAY_BUFFER,
+		sizeof(myNormals[0]) * myNormals.size(),
+		&myNormals[0],
+		GL_STATIC_DRAW
+	);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+	glEnableVertexAttribArray(0);
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	size = myNormals.size();
+	return normal_vao;
+}
+
+const string & Loader::modelFilePath()
+{
+	return myModelFilePath;
+}
+
+void Loader::setModelFilePath(const string & modelFilePath)
+{
+	myModelFilePath = modelFilePath;
 }
 
 
@@ -58,7 +129,7 @@ int Loader::CreateVAO()
 	return vao;
 }
 
-void Loader::StoreDataInAttributeList(int attribute, int coordinateSize, vector<vec3> data)
+void Loader::StoreDataInAttributeList(int attribute, int coordinateSize, const vector<vec3>& data)
 {
 	GLuint vbo;
 	glGenBuffers(1, &vbo);
@@ -71,7 +142,7 @@ void Loader::StoreDataInAttributeList(int attribute, int coordinateSize, vector<
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-void Loader::StoreDataInAttributeList(int attribute, int coordinateSize, vector<vec2>  data)
+void Loader::StoreDataInAttributeList(int attribute, int coordinateSize, const vector<vec2>&  data)
 {
 	GLuint vbo;
 	glGenBuffers(1, &vbo);
@@ -84,7 +155,7 @@ void Loader::StoreDataInAttributeList(int attribute, int coordinateSize, vector<
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-void Loader::BindIndicesBuffer(vector<int> indexes)
+void Loader::BindIndicesBuffer(const vector<int>& indexes)
 {
 	GLuint ebo;
 	glGenBuffers(1, &ebo);
@@ -241,11 +312,16 @@ void Loader::ProcessMesh(aiMesh* mesh, const aiScene* scene, vector<TexturedMode
 	}
 
 	RawModel* rawModel = LoadToVAO(vertices, uv, normals, indices);
-	TexturedModel* model = new TexturedModel(rawModel, textures);
-	model->SpecularColor = specularColor;
+	int normalsVectorSize = 0;
+	int normalsVBO = ConstructNormalsVectorsVBO(vertices, indices,normalsVectorSize);
+	rawModel->setNormalsVBO(normalsVBO);
+	rawModel->setNormalsCount(normalsVectorSize);
+	
+	TexturedModel* model = new TexturedModel(rawModel);
+	/*model->SpecularColor = specularColor;
 	model->DiffuseColor = diffuseColor;
 	model->AmbientColor = ambientColor;
-	model->Shininess = shininess;
+	model->Shininess = shininess;*/
 
 	models.push_back(model);
 }

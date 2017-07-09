@@ -3,9 +3,22 @@
 in vec2 text_coord;
 out vec4 color;
 uniform sampler2D texture;
+uniform sampler2D shadowMap;
+
+in vec4 shadowCoord;
 
 void main(){
   
   color = texture(texture, text_coord);  
+
+  vec2 shadowIndex = shadowCoord.xy/shadowCoord.w;
   
+  float pixelDepth = shadowCoord.w;
+  if( (shadowCoord.w > 0.0) && ( (shadowIndex.x >= 0.0 && shadowIndex.x <= 1.0) && (shadowIndex.y >= 0.0 && shadowIndex.y <= 1.0) ) ){
+		float lightDepth = texture(shadowMap, shadowIndex).w;
+		if(pixelDepth  > lightDepth){
+		 color = vec4(0,0,0,1);
+		}
+	}
+  color = vec4(pixelDepth/100.0,pixelDepth/100.0,pixelDepth/100.0,1);
 }

@@ -4,10 +4,9 @@
 
 Camera::Camera(vec3 Position,vec3 front, vec3 up) :position(Position),
 	speed(0.1f), mouseSpeed(0.2f), foV(45.0f),inputFlag(MovingFlag::stop),lastMousePosition(0.0f, 0.0f),
-	canMove(false), front(front),up(up)
+	canMove(false), front(normalize(front)),up(normalize(up))
 {
-	front = normalize(front);
-	up = normalize(up);
+
 }
 
 Camera::~Camera()
@@ -23,11 +22,11 @@ void Camera::Move(vec3 dir, float dt)
 void Camera::RotateX(float angle)
 {
 	vec3 Haxis = cross(yAxis, front);
-	Haxis = normalize(Haxis);
+	rightv = normalize(Haxis);
 
-	rotate(front, angle, Haxis);
+	rotate(front, angle, rightv);
 	front = normalize(front);
-	up = normalize(cross(front, Haxis));
+	up = normalize(cross(front, rightv));
 	
 
 }
@@ -35,11 +34,11 @@ void Camera::RotateX(float angle)
 void Camera::RotateY(float angle)
 {
 	vec3 Haxis = cross(yAxis, front);
-	Haxis = normalize(Haxis);
+	rightv = normalize(Haxis);
 
 	rotate(front, angle, yAxis);
 	front = normalize(front);
-	up = normalize(cross(front, Haxis));
+	up = normalize(cross(front, rightv));
 
 }
 
@@ -156,6 +155,16 @@ void Camera::onNotify(Event& evt)
 			canMove = false;
 			break;
 		};
+		break;
+	case Event::MouseWheel:
+  	    {
+		if (foV >= 1.0f && foV <= 45.0f)
+			foV -= evt.mouseWheel.z * 0.05f;
+		if (foV <= 1.0f)
+			foV = 1.0f;
+		if (foV >= 45.0f)
+			foV = 45.0f;
+	    } 
 		break;
 	default:
 		break;

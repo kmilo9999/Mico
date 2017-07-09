@@ -2,56 +2,70 @@
 
 
 
-Entity::Entity(vec3 position, quat orientation, vec3 scale ): 
-	Position(position),Orientation(orientation),Scale(scale)
+Entity::Entity( )
+	: EntityId(0)
 {
 }
 
 
 Entity::~Entity()
 {
-	if (boundingVolumen)
+
+}
+
+bool Entity::operator==(const Entity & rhs)
+{
+	return EntityId == rhs.EntityId;
+}
+
+
+void Entity::Initialize()
+{
+	ComponentsMap::iterator it = Components.begin();
+	ComponentsMap::iterator endIt = Components.end();
+	for (;it != endIt;++it)
 	{
-		delete boundingVolumen;
+		it->second->Initialize(this);
 	}
 }
 
-vec3 Entity::GetPosition()
+void Entity::Update()
 {
-	return Position;
+	ComponentsMap::iterator it = Components.begin();
+	ComponentsMap::iterator endIt = Components.end();
+	for (;it != endIt;++it)
+	{
+		it->second->Update();
+	}
 }
 
-void Entity::SetPosition(vec3 position)
+
+unsigned int Entity::GetEntityId()
 {
-	Position = position;
+	return EntityId;
 }
 
-vec3 Entity::GetScale()
+void Entity::SetEntityId(unsigned int id)
 {
-	return Scale;
+	EntityId = id;
 }
 
-void Entity::SetScale(vec3 scale)
+void Entity::AddComponent(Component * component)
 {
-	Scale = scale;
+	Components.insert(std::make_pair(component->GetName(), component));
 }
 
-quat Entity::GetOrientation()
+Component * Entity::GetComponent(string name)
 {
-	return Orientation;
+
+	ComponentsMap::iterator it = Components.find(name);
+	if (it != Components.end())
+	{
+		return it->second;
+	}
+
+	return nullptr;
 }
 
-void Entity::SetOrientatio(quat orientation)
-{
-	Orientation = orientation;
-}
 
-void Entity::SetBoundingVolumen(BoundingVolumen * volumen)
-{
-	boundingVolumen = volumen;
-}
 
-BoundingVolumen * Entity::GetBoundingVolumen()
-{
-	return boundingVolumen;
-}

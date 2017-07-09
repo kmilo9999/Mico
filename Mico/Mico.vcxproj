@@ -151,16 +151,23 @@
   <ItemGroup>
     <ClCompile Include="..\lib\glad\src\glad.c" />
     <ClCompile Include="BoundingSphere.cpp" />
+    <ClCompile Include="BoundingVolumen.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Entity.cpp" />
     <ClCompile Include="EntityManager.cpp" />
+    <ClCompile Include="FBO.cpp" />
     <ClCompile Include="GLError.cpp" />
     <ClCompile Include="GlobalLight.cpp" />
+    <ClCompile Include="GraphicsComponent.cpp" />
+    <ClCompile Include="imgui.cpp" />
+    <ClCompile Include="imgui_demo.cpp" />
+    <ClCompile Include="imgui_draw.cpp" />
     <ClCompile Include="Loader.cpp" />
     <ClCompile Include="Material.cpp" />
     <ClCompile Include="Math.cpp" />
     <ClCompile Include="Mico.cpp" />
     <ClCompile Include="SelectableBoundingVolumen.cpp" />
+    <ClCompile Include="ShadowObject.cpp" />
     <ClCompile Include="Terrain.cpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="RawModel.cpp" />
@@ -170,6 +177,8 @@
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="ShaderProgram.cpp" />
     <ClCompile Include="TexturedModel.cpp" />
+    <ClCompile Include="TransformationComponent.cpp" />
+    <ClCompile Include="UISystem.cpp" />
     <ClCompile Include="WindowHandler.cpp" />
     <ClCompile Include="WindowSystem.cpp" />
   </ItemGroup>
@@ -179,15 +188,26 @@
     <ClInclude Include="BoundingSphere.h" />
     <ClInclude Include="BoundingVolumen.h" />
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="Component.h" />
     <ClInclude Include="Entity.h" />
     <ClInclude Include="EntityManager.h" />
+    <ClInclude Include="FBO.h" />
     <ClInclude Include="GLError.h" />
     <ClInclude Include="GlobalLight.h" />
+    <ClInclude Include="GraphicsComponent.h" />
+    <ClInclude Include="imconfig.h" />
+    <ClInclude Include="imgui.h" />
+    <ClInclude Include="imgui_internal.h" />
     <ClInclude Include="Loader.h" />
     <ClInclude Include="Material.h" />
     <ClInclude Include="Math.h" />
     <ClInclude Include="Mico.h" />
+    <ClInclude Include="Observable.h" />
     <ClInclude Include="SelectableBoundingVolumen.h" />
+    <ClInclude Include="ShadowObject.h" />
+    <ClInclude Include="stb_rect_pack.h" />
+    <ClInclude Include="stb_textedit.h" />
+    <ClInclude Include="stb_truetype.h" />
     <ClInclude Include="Terrain.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="RawModel.h" />
@@ -199,12 +219,18 @@
     <ClInclude Include="ShaderProgram.h" />
     <ClInclude Include="System.h" />
     <ClInclude Include="TexturedModel.h" />
+    <ClInclude Include="TransformationComponent.h" />
+    <ClInclude Include="UISystem.h" />
     <ClInclude Include="WindowHandler.h" />
     <ClInclude Include="WindowSystem.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="LightModel.fragmentshader" />
     <None Include="LightModel.vertexshader" />
+    <None Include="NormalLines.fragmentshader" />
+    <None Include="NormalLines.vertexshader" />
+    <None Include="Shadows.fragmentshader" />
+    <None Include="Shadows.vertexshader" />
     <None Include="Simple.fragmentshader" />
     <None Include="Simple.vertexshader" />
     <None Include="Terrain.fragmentshader" />

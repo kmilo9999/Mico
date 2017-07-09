@@ -1,18 +1,15 @@
 #include "GlobalLight.h"
+#include "TransformationComponent.h"
 
-
-GlobalLight::GlobalLight(vec3 position, vec3 color, double ambient)
+GlobalLight::GlobalLight(vec3 color, double ambient)
 	:color(color),ambient(ambient)
 {
-	this->Position = position;
+
 }
 
 GlobalLight::~GlobalLight()
 {
-	if (model)
-	{
-		delete model;
-	}
+
 }
 
 vec3 GlobalLight::GetColor()
@@ -45,16 +42,6 @@ void GlobalLight::SetIntensity(float intensity)
 	this->intensity = intensity;
 }
 
-TexturedModel* GlobalLight::GetModel()
-{
-	return model;
-}
-
-void GlobalLight::SetModel(TexturedModel * _model)
-{
-	model = _model;
-}
-
 vec3 GlobalLight::GetSpecular()
 {
 	return specular;
@@ -72,14 +59,4 @@ vec3 GlobalLight::GetDiffuse()
 void GlobalLight::SetDiffuse(vec3 nDiffuse)
 {
 	this->diffuse = nDiffuse;
-}
-
-BoundingVolumen* GlobalLight::GetBoundingVolumen()
-{
-	return boundingVolumen;
-}
-
-void GlobalLight::SetBoundingVolumen(BoundingVolumen* volumen)
-{
-	boundingVolumen = volumen;
 }

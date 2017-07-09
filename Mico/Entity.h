@@ -2,33 +2,40 @@
 #include "TexturedModel.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
+#include <map>
 #include "BoundingSphere.h"
+#include "Component.h"
+
 
 using namespace glm;
+class EntityManager;
 class Entity
 {
-public:
-	Entity(vec3 postion=vec3(),quat orientation=quat(), vec3 scale = vec3() );
+	friend class EntityManager;
+
+   public:
+	
+    typedef map<std::string, Component*> ComponentsMap;
+
 	~Entity();
 
+	bool operator==(const Entity& rhs);
 
-	virtual vec3 GetPosition();
-	virtual void SetPosition(vec3 position);
+	
+	virtual unsigned int GetEntityId();
+	virtual void SetEntityId(unsigned int id);
+	virtual void AddComponent(Component* component);
+	virtual Component* GetComponent(string name);
+	virtual void Initialize();
 
-	virtual vec3 GetScale();
-	virtual void SetScale(vec3 scale);
-
-	virtual quat GetOrientation();
-	virtual void SetOrientatio(quat orientation);
-
-	void SetBoundingVolumen(BoundingVolumen* volumen);
-	BoundingVolumen* GetBoundingVolumen();
-
+	void Update();
 
 protected:
-	vec3 Position;
-	quat Orientation;
-	vec3 Scale;
-	BoundingVolumen* boundingVolumen;
+	ComponentsMap Components;
+	Entity();
+	
+	unsigned int EntityId;
+	
+
 };
 

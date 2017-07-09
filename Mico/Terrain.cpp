@@ -6,10 +6,28 @@
 
 Terrain::Terrain(float x, float z):X(x),Z(z)
 {
+	
+	EntityId = 1000;
 	Texture* texture = new Texture(GL_TEXTURE_2D, "../Resources/Textures/terrain.jpg");
-	vector<Texture*> textures;
-	textures.push_back(texture);
-	Model = new TexturedModel(GenerateTerrain(), textures);
+	TexturedModel* model = new TexturedModel(GenerateTerrain());
+
+	// The terrain is not doing any light calcultations. I just put the  material becasue 
+	// needed to initialize the GraphicsComponent
+	Material* material = 
+		new Material(vec3(1.0f, 0.5f, 0.31f), vec3(1.0f, 0.5f, 0.31f),
+			vec3(0.5f, 0.5f, 0.5f), 64.0f);
+
+	material->AddTexture(texture);
+
+	TransformationComponent* transformation = 
+		new TransformationComponent(vec3(X, 9.5, Z),quat(),vec3(1.0f, 1.0f, 1.0f));
+	AddComponent(transformation);
+
+	GraphicsComponent* myGraphicsComponent = new GraphicsComponent(model, material);
+	AddComponent(myGraphicsComponent);
+
+	Initialize();
+
 }
 
 
@@ -33,10 +51,19 @@ const float Terrain::GetWidthZ()
 	return this->Z;
 }
 
-TexturedModel* Terrain::GetModel()
+void Terrain::BindTextures(GraphicsComponent* graphicsCompnent)
 {
-	return this->Model;
+	graphicsCompnent->bindModelTextures();
 }
+
+void Terrain::Draw(ShaderProgram & shaderProgram)
+{
+	GraphicsComponent* myGraphicsComponent
+		= dynamic_cast<GraphicsComponent*>(GetComponent("GraphicsComponent"));
+	
+	myGraphicsComponent->Draw(shaderProgram);
+}
+
 
 RawModel* Terrain::GenerateTerrain()
 {

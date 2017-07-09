@@ -8,7 +8,7 @@ using namespace glm;
 class GlobalLight:public Entity
 {
 public:
-	GlobalLight(vec3 position,vec3 color = vec3(1.0f,1.0f,1.0f), double ambient = 1.0f);
+	GlobalLight(vec3 color = vec3(1.0f,1.0f,1.0f), double ambient = 1.0f);
 	~GlobalLight();
 
 
@@ -27,11 +27,6 @@ public:
 	float GetIntensity();
 	void SetIntensity(float intensity);
 
-	TexturedModel* GetModel();
-	void SetModel(TexturedModel* _model);
-
-	BoundingVolumen* GetBoundingVolumen();
-	void SetBoundingVolumen(BoundingVolumen*);
 
 private:
 	
@@ -42,8 +37,6 @@ private:
 	vec3 diffuse;
 
 	double intensity;
-	TexturedModel* model;
 
-	BoundingVolumen* boundingVolumen;
 };
 

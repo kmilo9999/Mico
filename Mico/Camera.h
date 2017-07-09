@@ -34,6 +34,7 @@ public:
 	vec3 position;
 	vec3 front;
 	vec3 up;
+	vec3 rightv;
 	
 	mat4& GetView();
 	vec3 GetFront();

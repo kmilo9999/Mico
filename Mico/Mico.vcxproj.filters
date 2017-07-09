@@ -16,6 +16,12 @@
     <Filter Include="lib">
       <UniqueIdentifier>{c9cccf50-b3db-4a5f-b480-d307a475cb40}</UniqueIdentifier>
     </Filter>
+    <Filter Include="shaders">
+      <UniqueIdentifier>{edefa345-410f-4e16-b94b-65c60a8414dd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="imgui">
+      <UniqueIdentifier>{268e59e3-f084-43fa-9e95-84c23c6f88b1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -75,9 +81,6 @@
     <ClCompile Include="Terrain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Material.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="EntityManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -85,6 +88,36 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SelectableBoundingVolumen.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BoundingVolumen.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="UISystem.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui.cpp">
+      <Filter>imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui_demo.cpp">
+      <Filter>imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui_draw.cpp">
+      <Filter>imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="GraphicsComponent.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TransformationComponent.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Material.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FBO.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ShadowObject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -155,9 +188,6 @@
     <ClInclude Include="Terrain.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Material.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="EntityManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -170,17 +200,79 @@
     <ClInclude Include="SelectableBoundingVolumen.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="UISystem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="imconfig.h">
+      <Filter>imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui.h">
+      <Filter>imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="imgui_internal.h">
+      <Filter>imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="stb_rect_pack.h">
+      <Filter>imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="stb_textedit.h">
+      <Filter>imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="stb_truetype.h">
+      <Filter>imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="Observable.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Component.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GraphicsComponent.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TransformationComponent.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Material.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FBO.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ShadowObject.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <None Include="LightModel.fragmentshader">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="LightModel.vertexshader">
+      <Filter>shaders</Filter>
+    </None>
     <None Include="Simple.fragmentshader">
-      <Filter>Source Files</Filter>
+      <Filter>shaders</Filter>
     </None>
     <None Include="Simple.vertexshader">
-      <Filter>Source Files</Filter>
+      <Filter>shaders</Filter>
     </None>
-    <None Include="LightModel.fragmentshader" />
-    <None Include="LightModel.vertexshader" />
-    <None Include="Terrain.fragmentshader" />
-    <None Include="Terrain.vertexshader" />
+    <None Include="Terrain.fragmentshader">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="Terrain.vertexshader">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="NormalLines.fragmentshader">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="NormalLines.vertexshader">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="Shadows.fragmentshader">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="Shadows.vertexshader">
+      <Filter>shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

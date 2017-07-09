@@ -14,6 +14,7 @@
 using namespace glm;
 using namespace std;
 
+
 class Loader
 {
 
@@ -24,9 +25,16 @@ public:
 		const vector<vec2>& textCoodinates, const vector<vec3>& normals, const vector<int>& indexes);
 	
 	
-	vector<TexturedModel*> LoadToFromFile(char* fileName);
+	TexturedModel* LoadToFromFile(const char* fileName);
+	GLuint ConstructNormalsVectorsVBO(vector<vec3>& vertices,vector<int>& indices,int& size);
+
+	const string& modelFilePath();
+	void setModelFilePath(const string& modelFilePath);
+
 
 private:
+
+	Loader();
 
 	vector<GLuint> vaos;
 	vector<GLuint> vbos;
@@ -34,9 +42,9 @@ private:
 
 	int CreateVAO();
 
-	void StoreDataInAttributeList(int attribute, int coordinateSize, vector<vec3>  data);
-	void StoreDataInAttributeList(int attribute, int coordinateSize, vector<vec2>  data);
-	void BindIndicesBuffer(vector<int> indexes);
+	void StoreDataInAttributeList(int attribute, int coordinateSize, const vector<vec3>&  data);
+	void StoreDataInAttributeList(int attribute, int coordinateSize, const vector<vec2>&  data);
+	void BindIndicesBuffer(const vector<int>& indexes);
 
 	void ProcessNode(aiNode* node, const aiScene* scene, vector<TexturedModel*>& models);
 	void ProcessMesh(aiMesh* mesh, const aiScene* scene, vector<TexturedModel*>& models);
@@ -45,5 +53,7 @@ private:
 
 	void UnbindVAO();
 	static Loader* instance;
+
+	string myModelFilePath;
 };
 

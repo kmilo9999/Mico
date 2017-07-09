@@ -8,6 +8,8 @@
 #include "GlobalLight.h"
 #include "Terrain.h"
 #include "EntityManager.h"
+#include "ShadowObject.h"
+
 
 class GraphicsSystem:public System, public Observer
 {
@@ -27,25 +29,40 @@ public:
 	void RenderEntities();
 	void RenderGlobalLight();
 	void RenderTerrain();
+	void RenderNormals();
+	void ShadowPass();
+	void LightModelPass();
 	
 	void SetGlobalLight(GlobalLight* light);
 
 	
 private:
 	vec3 RayCast(float mouse_x, float mouse_y);
-	void TestRayEntityIntersection(vec3 ray);
+	Entity* TestRayEntityIntersection(vec3 ray);
 	void RenderSelectedVolumen();
+	bool RayPlaneIntersection(vec3 plane,  vec3 rayStart, vec3 rayDirection);
+
 	vec2 windowSize;
 	Camera* camera;
 	Renderer* renderer;
-	ShaderProgram modelShader;
 	ShaderProgram lightModelShader;
+	ShaderProgram simpleShader;
 	ShaderProgram terrainShader;
+	ShaderProgram linesShader;
+	ShaderProgram shadowShader;
+	
+	ShadowObject shadowObjet;
+
+
 	GLFWwindow* window;
 	GlobalLight* light;
 	glm::mat4 projection;
 
-	SelectableBoundingVolumen* selected;
+	Entity* mouseSelectedEntity;
 	Terrain* terrain;
+	bool hasSelectedEntity;
+	vec2 lastMousePosition;
+	bool showNormals;
+	
 };
 
