@@ -1,5 +1,5 @@
 #include "Entity.h"
-
+#include "GraphicsComponent.h"
 
 
 Entity::Entity( )
@@ -37,6 +37,14 @@ void Entity::Update()
 	{
 		it->second->Update();
 	}
+}
+
+void Entity::Draw(ShaderProgram & shaderProgram)
+{
+	GraphicsComponent* myGraphicsComponent
+		= dynamic_cast<GraphicsComponent*>(GetComponent("GraphicsComponent"));
+
+	myGraphicsComponent->Draw(shaderProgram);
 }
 
 

@@ -41,6 +41,7 @@ private:
 	Entity* TestRayEntityIntersection(vec3 ray);
 	void RenderSelectedVolumen();
 	bool RayPlaneIntersection(vec3 plane,  vec3 rayStart, vec3 rayDirection);
+	void RenderTextureToQuad(Fbo& frameBuffer);
 
 	vec2 windowSize;
 	Camera* camera;
@@ -50,6 +51,7 @@ private:
 	ShaderProgram terrainShader;
 	ShaderProgram linesShader;
 	ShaderProgram shadowShader;
+	ShaderProgram renderToQuadShader;
 	
 	ShadowObject shadowObjet;
 
@@ -64,5 +66,8 @@ private:
 	vec2 lastMousePosition;
 	bool showNormals;
 	
+	/*render to quad*/
+	unsigned int VAO;
+	GLuint VBO;
 };
 

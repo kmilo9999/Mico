@@ -30,6 +30,8 @@ class Entity
 
 	void Update();
 
+	void Draw(ShaderProgram & shaderProgram);
+
 protected:
 	ComponentsMap Components;
 	Entity();

@@ -205,9 +205,9 @@ void EntityManager::CreateEntity(string modelId, vec3 postion, quat orientation,
 	TransformationComponent* transformation = new TransformationComponent(postion, orientation, scale);
 	myCenterEntity->AddComponent(transformation);
 	
-	Texture* targetTtexture = new Texture(GL_TEXTURE_2D, "../Resources/Textures/texture_sample.jpg");
+	//Texture* targetTtexture = new Texture(GL_TEXTURE_2D, "../Resources/Textures/texture_sample.jpg");
 	Material* material = new Material(vec3(1.0f, 0.5f, 0.31f), vec3(1.0f, 0.5f, 0.31f), vec3(0.5f, 0.5f, 0.5f), 64.0f);
-	material->AddTexture(targetTtexture);
+	//material->AddTexture(targetTtexture);
 	GraphicsComponent* graphics = new GraphicsComponent(GetModel(modelId), material);
 	myCenterEntity->AddComponent(graphics);
 

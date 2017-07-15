@@ -67,6 +67,11 @@ void GraphicsSystem::Init()
 	lightModelShader.addUniform("material.specular");
 	lightModelShader.addUniform("material.shininess");
 	lightModelShader.addUniform("ViewPos");
+	lightModelShader.addUniform("hasTexture");
+	lightModelShader.addUniform("shadowMap");
+	lightModelShader.addUniform("ShadowMatrix");
+
+	
 	//lightModelShader.addUniform("shadowMap");
 
 	simpleShader.addUniform("ProjectionMatrix");
@@ -93,26 +98,56 @@ void GraphicsSystem::Init()
 	shadowShader.addUniform("ViewMatrix");
 	shadowShader.addUniform("ModelMatrix");
 
+	renderToQuadShader.LoadShaders("quad.vertexshader", "quad.fragmentshader");
+	renderToQuadShader.addUniform("screenTexture");
+
+
+	/* Render to quad init*/
+
+	float quadVertices[] = {
+		// positions   // texCoords
+		-1.0f,  1.0f,  0.0f, 1.0f,
+		-1.0f, -1.0f,  0.0f, 0.0f,
+		1.0f, -1.0f,  1.0f, 0.0f,
+
+		-1.0f,  1.0f,  0.0f, 1.0f,
+		1.0f, -1.0f,  1.0f, 0.0f,
+		1.0f,  1.0f,  1.0f, 1.0f
+	};
+
+	
+	glGenVertexArrays(1, &VAO);
+	glGenBuffers(1, &VBO);
+	glBindVertexArray(VAO);
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+
 }
 
 void GraphicsSystem::Update()
 {
 
 	camera->Update();
+	projection = glm::perspective(camera->foV, windowSize.x / windowSize.y, 0.1f, 1000.0f);
 	terrain->Update();
 	light->Update();
-
+	ShadowPass();
 	
-    ShadowPass();
+	
 
 	InitRender();
+	//RenderTextureToQuad(*shadowObjet.shadowFbo());
 
 	LightModelPass();
 
-	if (showNormals)
-	{
-		RenderNormals();
-	}
+	//if (showNormals)
+	//{
+	//	RenderNormals();
+	//}
 	RenderGlobalLight();
 	
 	RenderSelectedVolumen();
@@ -229,23 +264,23 @@ void GraphicsSystem::InitRender()
 	glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	projection = glm::perspective(camera->foV, windowSize.x / windowSize.y, 0.1f, 1000.0f);
+	
 }
 
 void GraphicsSystem::InitScene()
 {
 	light = new GlobalLight();
 
-	light->SetAmbient(vec3(0.2f));
+	light->SetAmbient(vec3(0.85f));
 	light->SetDiffuse(vec3(0.5));
-	light->SetSpecular(vec3(1.0f));
+	light->SetSpecular(vec3(0.0f));
 
 	TransformationComponent* lightTransformation = 
 		new TransformationComponent(vec3(5.0f,17.0f,5.0f),quat(), vec3(0.3f, 0.3f, 0.3f));
 	light->AddComponent(lightTransformation);
 
 	Texture* targetTtexture = new Texture(GL_TEXTURE_2D, "../Resources/Textures/texture_sample.jpg");
-	Material* material = new Material(vec3(1.0f, 0.5f, 0.31f), vec3(1.0f, 0.5f, 0.31f), vec3(0.5f, 0.5f, 0.5f), 64.0f);
+	Material* material = new Material(vec3(1.0f, 0.5f, 0.31f), vec3(1.0f, 0.5f, 0.31f), vec3(0.2f, 0.2f, 0.2f), 64.0f);
 	material->AddTexture(targetTtexture);
 	GraphicsComponent* graphics = new GraphicsComponent(EntityManager::GetInstance()->GetModel("cube"), material);
 	light->AddComponent(graphics);
@@ -260,7 +295,7 @@ void GraphicsSystem::InitScene()
 	light->Initialize();
 
 	terrain = new Terrain(0.0f, 0.0f);
-
+	EntityManager::GetInstance()->InserModelEntity(terrain);
 
 }
 
@@ -285,7 +320,17 @@ void GraphicsSystem::RenderEntities()
 		lightModelShader.setUniform("light.diffuse", light->GetDiffuse());
 		lightModelShader.setUniform("light.specular", light->GetSpecular());
 		lightModelShader.setUniform("ViewPos", camera->position);
-		//lightModelShader.setUniformi("shadowMap", 10);
+
+
+		mat4x4 trans = translate(mat4(), vec3(0.5f, 0.5f, 0.5f));
+		mat4x4 sca = scale(mat4(), vec3(0.5f, 0.5f, 0.5f));
+		mat4x4 B = trans*sca;
+
+		mat4& viewMatrixLightPOV = glm::lookAt(lightTransform->GetPosition(), vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
+		mat4x4 shadowMatrix = B*shadowObjet.shadowProjectionMatrix() * viewMatrixLightPOV;
+
+		lightModelShader.setUniform("ShadowMatrix", shadowMatrix);
+		lightModelShader.setUniformi("shadowMap", 1);
 
 		//Render models
 		vector<Entity*>::iterator it = EntityManager::GetInstance()->GetEntities().begin();
@@ -299,11 +344,20 @@ void GraphicsSystem::RenderEntities()
 				TexturedModel* model = graphicsComponent->GetTexturedModel();
 				Material* material = graphicsComponent->GetMaterial();
 
+				if (material->GetTextures().size() > 0)
+				{
+					lightModelShader.setUniformi("hasTexture", 1);
+				}
+				else
+				{ 
+					lightModelShader.setUniformi("hasTexture", 0);
+				}
+
 				lightModelShader.setUniform("material.ambient", material->GetAmbient());
 				lightModelShader.setUniform("material.diffuse", material->GetDiffuse());
 				lightModelShader.setUniform("material.specular", material->GetSpecular());
 				lightModelShader.setUniformf("material.shininess", material->GetShinines());
-
+				graphicsComponent->setShadowsFbo(shadowObjet.shadowFbo());
 				graphicsComponent->bindModelTextures();
 				//graphicsComponent->setShadowsFbo(shadowObjet.shadowFbo());
 				graphicsComponent->Draw(lightModelShader);
@@ -398,21 +452,19 @@ void GraphicsSystem::ShadowPass()
 	glDisable(GL_BLEND);
 	glEnable(GL_DEPTH_TEST);
 	glViewport(0, 0, windowSize.x, windowSize.y);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	
+	glClear(GL_DEPTH_BUFFER_BIT);
+
 	vec3 up = vec3(0.0, 1.0, 0.0);
 	TransformationComponent* lightTransform = dynamic_cast<TransformationComponent*>(light->GetComponent("TransformationComponent"));
-	float lh = 0.6f* 0.1f;
-	float lw = lh * windowSize.x / windowSize.y;
-	mat4x4 shadowProjection = frustum(-lw, lw, -lh, lh, 0.1f, 1000.0f);
+
 
 	mat4x4 lightPOV = lookAt(lightTransform->GetPosition(), vec3(0, 0, 0), up);
 	shadowShader.setUniform("ViewMatrix",lightPOV );
-	shadowShader.setUniform("ProjectionMatrix", shadowProjection);
+	shadowShader.setUniform("ProjectionMatrix", projection);
 	
-	shadowObjet.setShadowProjectionMatrix(shadowProjection);
+	shadowObjet.setShadowProjectionMatrix(projection);
 
-	terrain->Draw(shadowShader);
+	
 	//Render models
 	vector<Entity*>::iterator it = EntityManager::GetInstance()->GetEntities().begin();
 	vector<Entity*>::iterator end = EntityManager::GetInstance()->GetEntities().end();
@@ -432,8 +484,8 @@ void GraphicsSystem::ShadowPass()
 
 void GraphicsSystem::LightModelPass()
 {
-	RenderTerrain();
-	//RenderEntities();
+	//RenderTerrain();
+	RenderEntities();
 }
 
 void GraphicsSystem::RenderSelectedVolumen()
@@ -476,6 +528,25 @@ bool GraphicsSystem::RayPlaneIntersection(vec3 planeNormal, vec3 rayStart, vec3 
 	}
 	return false;
 
+}
+
+void GraphicsSystem::RenderTextureToQuad(Fbo& frameBuffer)
+{
+	renderToQuadShader.setUniformi("screenTexture", 0);
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glDisable(GL_DEPTH_TEST);
+	glClear(GL_COLOR_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	// Render to the screen
+	renderToQuadShader.start();
+	glBindVertexArray(VAO);
+	glDisable(GL_DEPTH_TEST);
+	glBindTexture(GL_TEXTURE_2D, frameBuffer.texture);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+	renderToQuadShader.stop();
+	
 }
 
 void GraphicsSystem::SetGlobalLight(GlobalLight* light)

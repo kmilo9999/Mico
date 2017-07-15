@@ -14,13 +14,14 @@ struct Light {
     vec3 specular;
 };
 
+
 uniform Material material;
 uniform Light light;
 in vec3 fragmentColor;
 in vec2 TextCoord;
 in vec3 norm;
 in vec3 FragPos;
-//in vec3 view; 
+uniform bool hasTexture;
 
 out vec4 color;
 uniform sampler2D texture;
@@ -29,12 +30,25 @@ uniform float LightIntensity;
 uniform vec3 LightPos;
 uniform vec3 LightColor;
 uniform vec3 ViewPos;
+
+//shadow calculation
 uniform sampler2D shadowMap;
+in vec4 shadowCoord;
 
-void lightColor()
+bool ShadowCalculation(vec4 shadowCoord)
 {
+     vec2 shadowIndex = shadowCoord.xy/shadowCoord.w;
+	 float lightDepth = texture(shadowMap, shadowIndex).w;
+	 float pixelDepth = shadowCoord.w;
+     
+     bool shadow = false ;
+     if( (shadowCoord.w > 0.0) && ( (shadowIndex.x > 0.0 && shadowIndex.x < 1.0) && (shadowIndex.y > 0.0 && shadowIndex.y < 1.0) ) ){
+		shadow = pixelDepth > lightDepth  ? true : false;
+	 }
 
+     return shadow;
 }
+
 
 void main(){
   
@@ -42,11 +56,13 @@ void main(){
   // color of the object
   vec3 objectColor = vec3(1.0f, 0.5f, 0.31f);
 
-  // shadows
- // vec4 shadowCoord = = ShadowMatrix * vec4(position,1);
 
   // color from the texture, temporaly unused
-  vec3 textcolor = texture(texture, TextCoord).rgb;  
+  if(hasTexture)
+  {
+    objectColor = texture(texture, TextCoord).rgb;
+  }
+    
   
   // Ambient
   
@@ -67,8 +83,24 @@ void main(){
   
   vec3 specular = ( spec * material.specular) *   light.specular; 
 
+ 
+  // shadow calculations
+  bool shadow = ShadowCalculation (shadowCoord);
 
-  vec3 nColor = (ambient + diffuse + specular) * objectColor;
+  if(!shadow)
+  {
+    vec3 nColor = (ambient + (diffuse + specular)) * objectColor;
+    color = vec4(nColor,1.0);
+  }
+  else
+  {
+    color = vec4(vec3(0,0,0),1.0);
+  }
 
-  color = vec4(nColor,1.0);
+  vec2 shadowIndex = shadowCoord.xy/shadowCoord.w;
+	 float lightDepth = texture(shadowMap, shadowIndex).w;
+	 float pixelDepth = shadowCoord.w;
+  // color = vec4(pixelDepth/100.0,pixelDepth/100.0,pixelDepth/100.0,1);
+  //color = vec4(lightDepth/100.0,lightDepth/100.0,lightDepth/100.0,1); 
+
 }

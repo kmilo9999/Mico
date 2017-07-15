@@ -88,7 +88,7 @@ GLuint Loader::ConstructNormalsVectorsVBO(vector<vec3>& vertices, vector<int>& i
 	}
 
 	glGenVertexArrays(1, &normal_vao);
-		glGenBuffers(1, &normals_vbo);
+	glGenBuffers(1, &normals_vbo);
 	glBindVertexArray(normal_vao);
 	glBindBuffer(GL_ARRAY_BUFFER, normals_vbo);
 	glBindVertexArray(normals_vbo);

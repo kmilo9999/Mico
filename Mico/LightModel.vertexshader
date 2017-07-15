@@ -16,10 +16,14 @@ uniform mat4 ProjectionMatrix;
 
 //uniform vec3 ViewPos;
 
+//shadow information
+uniform mat4 ShadowMatrix;
+out vec4 shadowCoord;
+
 void main(){
   gl_Position =  ProjectionMatrix * ViewMatrix * ModelMatrix * vec4(vertexPosition,1.0f);
   FragPos =  vec3(ModelMatrix * vec4(vertexPosition,1.0f));
   TextCoord = texCoord;
   norm = mat3(transpose(inverse(ModelMatrix))) * normal;
-  //view = ViewPos;
+  shadowCoord = ShadowMatrix * ModelMatrix * vec4(vertexPosition,1.0f);
 }

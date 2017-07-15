@@ -1,24 +1,35 @@
 #version 330 core
 
 in vec2 text_coord;
-out vec4 color;
+
 uniform sampler2D texture;
 uniform sampler2D shadowMap;
 
 in vec4 shadowCoord;
 
+
 void main(){
   
-  color = texture(texture, text_coord);  
+  vec3 color = texture(texture, text_coord).xyz;  
 
-  vec2 shadowIndex = shadowCoord.xy/shadowCoord.w;
+  vec3 shadowIndex = shadowCoord.xyz/shadowCoord.w;
   
-  float pixelDepth = shadowCoord.w;
+  float pixelDepth = shadowCoord.z;
+  float lightDepth = texture(shadowMap, shadowIndex.xy).r;
+  float shadowFactor = 1;
   if( (shadowCoord.w > 0.0) && ( (shadowIndex.x >= 0.0 && shadowIndex.x <= 1.0) && (shadowIndex.y >= 0.0 && shadowIndex.y <= 1.0) ) ){
-		float lightDepth = texture(shadowMap, shadowIndex).w;
-		if(pixelDepth  > lightDepth){
-		 color = vec4(0,0,0,1);
+		if(pixelDepth  <= lightDepth){
+		 shadowFactor = 0;
 		}
 	}
-  color = vec4(pixelDepth/100.0,pixelDepth/100.0,pixelDepth/100.0,1);
+
+   //color = vec3(pixelDepth/100.0,pixelDepth/100.0,pixelDepth/100.0);
+   // color = vec3(lightDepth/100.0,lightDepth/100.0,lightDepth/100.0);
+   gl_FragColor =  vec4(color,1.0);
+
+
+  
+  
+  //color = vec4(shadowIndex,0,1);
+  //color = texture(shadowMap, shadowIndex);
 }
