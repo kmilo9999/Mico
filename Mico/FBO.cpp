@@ -14,15 +14,15 @@ void Fbo::CreateFBO(const int w, const int h)
 	unsigned int depthBuffer;
 	glGenRenderbuffers(1, &depthBuffer);
 	glBindRenderbuffer(GL_RENDERBUFFER, depthBuffer);
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8,
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT,
 		width, height);
-	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
 		GL_RENDERBUFFER, depthBuffer);
 
 	// Create texture and attach FBO's color 0 attachment
 	glGenTextures(1, &texture);
 	glBindTexture(GL_TEXTURE_2D, texture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height,
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height,
 		0, GL_RGBA, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
 

@@ -14,8 +14,8 @@ Terrain::Terrain(float x, float z):X(x),Z(z)
 	// The terrain is not doing any light calcultations. I just put the  material becasue 
 	// needed to initialize the GraphicsComponent
 	Material* material = 
-		new Material(vec3(1.0f, 1.0f, 1.0f), vec3(1.0f, 1.0f, 1.0f),
-			vec3(0.2f, 0.2f, 0.2f), 32.0f);
+		new Material(vec3(0.2f, 0.2f, 0.2f), vec3(0.8f, 0.8f, 0.8f),
+			vec3(0.0, 0.0, 0.0), 25.6f);
 
 	material->AddTexture(texture);
 

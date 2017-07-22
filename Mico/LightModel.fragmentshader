@@ -35,16 +35,19 @@ uniform vec3 ViewPos;
 uniform sampler2D shadowMap;
 in vec4 shadowCoord;
 
-bool ShadowCalculation(vec4 shadowCoord)
+bool ShadowCalculation(vec4 projectionCoord)
 {
-     vec2 shadowIndex = shadowCoord.xy/shadowCoord.w;
-	 float lightDepth = texture(shadowMap, shadowIndex).w;
-	 float pixelDepth = shadowCoord.w;
+     vec2 shadowIndex = projectionCoord.xy/projectionCoord.w;
+	
      
-     bool shadow = false ;
-     if( (shadowCoord.w > 0.0) && ( (shadowIndex.x > 0.0 && shadowIndex.x < 1.0) && (shadowIndex.y > 0.0 && shadowIndex.y < 1.0) ) ){
-		shadow = pixelDepth > lightDepth  ? true : false;
+	 bool shadow = false;
+	 if( (projectionCoord.w > 0.0) && ( (shadowIndex.x > 0.0 && shadowIndex.x < 1.0) && (shadowIndex.y > 0.0 && shadowIndex.y < 1.0) ) ){
+	    float lightDepth = texture(shadowMap, shadowIndex).w;
+	    float pixelDepth = projectionCoord.w;
+		float bias = 0.005;
+	    shadow = pixelDepth - lightDepth > bias  ? true : false;
 	 }
+	 
 
      return shadow;
 }
@@ -89,18 +92,13 @@ void main(){
 
   if(!shadow)
   {
-    vec3 nColor = (ambient + (diffuse + specular)) * objectColor;
-    color = vec4(nColor,1.0);
+      vec3 nColor = (ambient + diffuse + specular) * objectColor;
+	  color = vec4(nColor,1.0);
   }
   else
   {
-    color = vec4(vec3(0,0,0),1.0);
+     color = vec4(ambient,1.0);
   }
-
-  vec2 shadowIndex = shadowCoord.xy/shadowCoord.w;
-	 float lightDepth = texture(shadowMap, shadowIndex).w;
-	 float pixelDepth = shadowCoord.w;
-  // color = vec4(pixelDepth/100.0,pixelDepth/100.0,pixelDepth/100.0,1);
-  //color = vec4(lightDepth/100.0,lightDepth/100.0,lightDepth/100.0,1); 
-
+ 
+ 
 }

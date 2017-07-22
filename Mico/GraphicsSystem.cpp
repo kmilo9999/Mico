@@ -149,8 +149,8 @@ void GraphicsSystem::Update()
 	//	RenderNormals();
 	//}
 	RenderGlobalLight();
-	
-	RenderSelectedVolumen();
+	/*
+	RenderSelectedVolumen();*/
 	
 }
 
@@ -307,7 +307,7 @@ void GraphicsSystem::FinishRender()
 
 void GraphicsSystem::RenderEntities()
 {
-	//glm::mat4 view = glm::lookAt(vec3(0,0,4),vec3(0,0,0), vec3(0,1,0));
+	
 	TransformationComponent* lightTransform = dynamic_cast<TransformationComponent*>(light->GetComponent("TransformationComponent"));
 	if (lightTransform)
 	{
@@ -359,7 +359,6 @@ void GraphicsSystem::RenderEntities()
 				lightModelShader.setUniformf("material.shininess", material->GetShinines());
 				graphicsComponent->setShadowsFbo(shadowObjet.shadowFbo());
 				graphicsComponent->bindModelTextures();
-				//graphicsComponent->setShadowsFbo(shadowObjet.shadowFbo());
 				graphicsComponent->Draw(lightModelShader);
 			}
 
@@ -448,21 +447,26 @@ void GraphicsSystem::ShadowPass()
 {
 	shadowShader.start();
 	shadowObjet.shadowFbo()->Bind();
-
-	glDisable(GL_BLEND);
-	glEnable(GL_DEPTH_TEST);
-	glViewport(0, 0, windowSize.x, windowSize.y);
-	glClear(GL_DEPTH_BUFFER_BIT);
+	
+	
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	
+	glViewport(0, 0, 1024, 1024);
+	
 
 	vec3 up = vec3(0.0, 1.0, 0.0);
 	TransformationComponent* lightTransform = dynamic_cast<TransformationComponent*>(light->GetComponent("TransformationComponent"));
 
+	float near_plane = 0.1f, far_plane = 10000.0f;
+	float lh = 0.6f*near_plane;
+	float lw = lh * 1024 / 1024;
+	glm::mat4 lightProjection = frustum(-lw, lw, -lh, lh, near_plane, far_plane);
 
 	mat4x4 lightPOV = lookAt(lightTransform->GetPosition(), vec3(0, 0, 0), up);
 	shadowShader.setUniform("ViewMatrix",lightPOV );
-	shadowShader.setUniform("ProjectionMatrix", projection);
+	shadowShader.setUniform("ProjectionMatrix", lightProjection);
 	
-	shadowObjet.setShadowProjectionMatrix(projection);
+	shadowObjet.setShadowProjectionMatrix(lightProjection);
 
 	
 	//Render models
@@ -477,9 +481,10 @@ void GraphicsSystem::ShadowPass()
 		}
 	}
 
-	glEnable(GL_BLEND);
+	
 	shadowObjet.shadowFbo()->Unbind();
 	shadowShader.stop();
+	
 }
 
 void GraphicsSystem::LightModelPass()
