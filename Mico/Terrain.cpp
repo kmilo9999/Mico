@@ -8,14 +8,14 @@ Terrain::Terrain(float x, float z):X(x),Z(z)
 {
 	
 	EntityId = 1000;
-	Texture* texture = new Texture(GL_TEXTURE_2D, "../Resources/Textures/terrain.jpg");
+	Texture* texture = new Texture(GL_TEXTURE_2D, "../Resources/Textures/texture_sample.jpg");
 	TexturedModel* model = new TexturedModel(GenerateTerrain());
 
 	// The terrain is not doing any light calcultations. I just put the  material becasue 
 	// needed to initialize the GraphicsComponent
 	Material* material = 
-		new Material(vec3(0.2f, 0.2f, 0.2f), vec3(0.8f, 0.8f, 0.8f),
-			vec3(0.0, 0.0, 0.0), 25.6f);
+		new Material(vec3(0.1f, 0.1f, 0.1f), vec3(0.3, 0.2, 0.1),
+			vec3(1.0f), 32.0f);
 
 	material->AddTexture(texture);
 
@@ -60,7 +60,6 @@ void Terrain::Draw(ShaderProgram & shaderProgram)
 {
 	GraphicsComponent* myGraphicsComponent
 		= dynamic_cast<GraphicsComponent*>(GetComponent("GraphicsComponent"));
-	
 	myGraphicsComponent->Draw(shaderProgram);
 }
 

@@ -24,12 +24,13 @@ in vec3 FragPos;
 uniform bool hasTexture;
 
 out vec4 color;
-uniform sampler2D texture;
+uniform sampler2D textureColor;
 uniform float AmbientFactor;
 uniform float LightIntensity;
 uniform vec3 LightPos;
 uniform vec3 LightColor;
 uniform vec3 ViewPos;
+uniform bool isGround;
 
 //shadow calculation
 uniform sampler2D shadowMap;
@@ -60,44 +61,50 @@ void main(){
   vec3 objectColor = vec3(1.0f, 0.5f, 0.31f);
 
 
-  // color from the texture, temporaly unused
+  // color from the texture
   if(hasTexture)
   {
-    objectColor = texture(texture, TextCoord).rgb;
+        if(isGround)
+		{
+			objectColor = texture(textureColor, TextCoord).rgb;
+		}
   }
-    
+  
   
   // Ambient
   
-  vec3 ambient = material.ambient * light.ambient;
+  vec3 ambient = light.ambient * material.ambient ;
 
   vec3 normal = normalize(norm);
   vec3 lightDir = normalize(light.position - FragPos);  
-  float diff = clamp(dot(lightDir,normal), 0, 1);
-  vec3 diffuse = (diff * material.diffuse) * light.diffuse;
+  
+  float diff = max(dot(lightDir,normal), 0.0);
+  vec3 diffuse = light.diffuse * diff * material.diffuse ;
 
   vec3 viewDir = normalize(ViewPos - FragPos);
-  vec3 reflectDir = reflect(-lightDir, norm);  
-  float spec = 0;
-  if(diff > 0)
-  {
-    spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
-  }
+  vec3 reflectDir = reflect(-lightDir, normal);  
+  float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
   
-  vec3 specular = ( spec * material.specular) *   light.specular; 
+  
+  vec3 specular = light.specular * spec * material.specular ; 
 
  
   // shadow calculations
   bool shadow = ShadowCalculation (shadowCoord);
 
+
   if(!shadow)
   {
-      vec3 nColor = (ambient + diffuse + specular) * objectColor;
+      
+  vec3 nColor = (ambient + diffuse + specular) * objectColor;
 	  color = vec4(nColor,1.0);
   }
   else
   {
-     color = vec4(ambient,1.0);
+  // I had to multiply by 0.5 because the using only the ambient light was not enough to 
+  // influence the color of the  occluded pixels
+  vec3 nColor = (ambient) * objectColor * vec3(0.5); 
+     color = vec4(nColor,1.0);
   }
  
  

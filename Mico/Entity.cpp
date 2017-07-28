@@ -43,7 +43,6 @@ void Entity::Draw(ShaderProgram & shaderProgram)
 {
 	GraphicsComponent* myGraphicsComponent
 		= dynamic_cast<GraphicsComponent*>(GetComponent("GraphicsComponent"));
-
 	myGraphicsComponent->Draw(shaderProgram);
 }
 

@@ -59,6 +59,7 @@ private:
 	GLFWwindow* window;
 	GlobalLight* light;
 	glm::mat4 projection;
+	vec3 ambientColor;
 
 	Entity* mouseSelectedEntity;
 	Terrain* terrain;
