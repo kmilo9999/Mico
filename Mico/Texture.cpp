@@ -2,10 +2,17 @@
 #include <cassert>
 
 
-Texture::Texture(GLenum TextureTarget, const std::string& filename) :
-	m_textureTarget(TextureTarget), m_fileName(filename.c_str())
+Texture::Texture(GLenum TextureTarget, const std::string& filename, bool is2D)
+	: myTextureTarget(TextureTarget)
+	, myFileName(filename.c_str())
+	, myIs2D(is2D)
 {
-	texture_id = LoadTexture();
+   texture_id = Load2DTexture();
+}
+
+Texture::Texture(GLenum TextureTarget, std::vector<std::string> paths, bool is2D)
+{
+	texture_id = Load3DTexture(paths);
 }
 
 Texture::~Texture()
@@ -13,60 +20,22 @@ Texture::~Texture()
 
 }
 
-int Texture::LoadTexture()
+int Texture::Load2DTexture()
 {
 
 	GLuint textureID;
 
-	//image format
-	FREE_IMAGE_FORMAT fif = FIF_UNKNOWN;
-	//pointer to the image, once loaded
-	FIBITMAP *dib(0);
+	int width = 0;
+	int height = 0;
 	//pointer to the image data
-	BYTE* bits(0);
-	//image width and height
-	unsigned int width(0), height(0);
-	//OpenGL's image ID to map to
-
-
-	GLuint gl_texID;
-	//check the file signature and deduce its format
-	fif = FreeImage_GetFileType(m_fileName, 0);
-	//if still unknown, try to guess the file format from the file extension
-	if (fif == FIF_UNKNOWN)
-	{
-		fif = FreeImage_GetFIFFromFilename(m_fileName);
-	}
-	
-
-	//if still unkown, return failure
-	if (fif == FIF_UNKNOWN)
-	{
-		assert(false && "texture unknow file format");
-	}
-	
-
-	//check that the plugin has reading capabilities and load the file
-	if (FreeImage_FIFSupportsReading(fif))
-		dib = FreeImage_Load(fif, m_fileName);
-
-	//if the image failed to load, return failure
-	if (!dib)
-	{
-	    assert(false && "Image failed to load 1");
-	}
+	BYTE * bits(0);
 
 	//retrieve the image data
-	bits = FreeImage_GetBits(dib);
-	//get the image width and height
-	width = FreeImage_GetWidth(dib);
-	height = FreeImage_GetHeight(dib);
 	//if this somehow one of these failed (they shouldn't), return failure
-	if ((bits == 0) || (width == 0) || (height == 0))
+	if (!LoadTexture(myFileName,width,height, &bits))
 	{
 		assert(false && "Image failed to load 2");
 	}
-		
 
 	glGenTextures(1, &textureID);
 
@@ -87,22 +56,138 @@ int Texture::LoadTexture()
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 
+	// Return the ID of the texture we just created
+	return textureID;
+}
+
+int Texture::Load3DTexture(const std::vector<std::string>& paths)
+{
+	GLuint texture;
+	if (paths.size() == 0)
+	{
+		assert(false && "no paths to load from");
+		return texture;
+	}
+
+	GLsizei width, height, depth = 0;
+
+	std::vector<image> formatedImages(paths.size());
+
+	// load and format each image
+	for (int i = 0; i < paths.size(); ++i)
+	{
+		BYTE * bits(0);
+		if (!LoadTexture(myFileName, width, height, &bits))
+		{
+			assert(false && "Image failed to load 2");
+		}
+		image img(width, height, bits);
+		formatedImages.push_back(img);
+	}
+
+	// create empty 3D texture
+
+	GLuint textureID;
+	glGenTextures(1, &textureID);
+	glBindTexture(GL_TEXTURE_3D, textureID);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+	// allocate memory for 3D texture
+	glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, width,
+		height, depth, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+
+
+	// copy image data to each layer of 3D texture
+
+	for (int i = 0; i < formatedImages.size() ; ++i)
+	{
+		glTexSubImage3D(
+			GL_TEXTURE_3D, 0,
+			0, 0, (GLint)i,
+			width, height, 1,
+			GL_RGBA, GL_UNSIGNED_BYTE,
+			formatedImages[i].imageData
+		);
+	}
+
+
+	glGenerateMipmap(GL_TEXTURE_3D);
+	glBindTexture(GL_TEXTURE_3D, 0);
+
+
+}
+
+bool Texture::LoadTexture(const std::string& fileName, int& width, int& height, unsigned char ** data)
+{
+	//image format
+	FREE_IMAGE_FORMAT fif = FIF_UNKNOWN;
+	//pointer to the image, once loaded
+	FIBITMAP *dib(0);
+	BYTE* bits(0);
+
+	GLuint gl_texID;
+	//check the file signature and deduce its format
+	fif = FreeImage_GetFileType(myFileName, 0);
+	//if still unknown, try to guess the file format from the file extension
+	if (fif == FIF_UNKNOWN)
+	{
+		fif = FreeImage_GetFIFFromFilename(myFileName);
+	}
+
+
+	//if still unkown, return failure
+	if (fif == FIF_UNKNOWN)
+	{
+		assert(false && "texture unknow file format");
+	}
+
+
+	//check that the plugin has reading capabilities and load the file
+	if (FreeImage_FIFSupportsReading(fif))
+		dib = FreeImage_Load(fif, myFileName);
+
+	height = FreeImage_GetHeight(dib);
+	width = FreeImage_GetWidth(dib);
+	int BPP = FreeImage_GetBPP(dib) / 8;
+	bits = FreeImage_GetBits(dib);
+	*data = (unsigned char *)malloc(width * height * BPP);
+	memcpy(*data, bits, width * height * BPP);
+
+	//if the image failed to load, return failure
+	if (!dib)
+	{
+		assert(false && "Image failed to load 1");
+	}
+
 	//Free FreeImage's copy of the data
 	FreeImage_Unload(dib);
 
-	// Return the ID of the texture we just created
-	return textureID;
+	return true;
 }
 
 
 void Texture::Bind(GLenum TextureUnit)
 {
 	glActiveTexture(GL_TEXTURE0 + TextureUnit);
-	glBindTexture(m_textureTarget, texture_id);
+	glBindTexture(myTextureTarget, texture_id);
 }
 
 GLuint Texture::GetTextureId()
 {
 	return texture_id;
+}
+
+bool Texture::GetIs2D()
+{
+	return myIs2D;
+}
+
+void Texture::SetIs2D(bool is2d)
+{
+	myIs2D = is2d;
 }
 
