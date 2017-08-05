@@ -9,10 +9,10 @@ class Texture
 public:
 
 	//! Loads a 2D textures
-	Texture(GLenum TextureTarget, const std::string& filename, bool is2D = true);
+	Texture(GLenum TextureTarget, const std::string& filename);
 
 	//! Loads an array of 2D textues into a 3D texture
-	Texture(GLenum TextureTarget, std::vector<std::string> paths, bool is2D = false);
+	Texture(GLenum TextureTarget, const std::vector<std::string>& paths);
 
 	~Texture();
 

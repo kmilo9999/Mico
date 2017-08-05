@@ -1,0 +1,109 @@
+#version 430 core
+
+
+struct Material {
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+    float shininess;
+}; 
+
+struct Light {
+    vec3 position;
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+};
+
+in vec3 fragmentColor;
+in vec2 TextCoord;
+in vec3 norm;
+in vec3 FragPos;
+
+out vec4 color;
+
+uniform Material material;
+uniform Light light;
+uniform vec3 ViewPos;
+
+// sampler for 3D texture
+//uniform sampler3D u_colorTexture;
+layout (binding=0) uniform sampler2DArray textureArray;
+
+void main(){
+  
+  // I use light.ambient as default ambient value
+
+  vec3 normal = normalize(norm);
+  vec3 lightDir = normalize(light.position - FragPos);  
+  float diff = max(dot(lightDir,normal), 0.0);
+  
+
+  vec3 viewDir = normalize(ViewPos - FragPos);
+  vec3 halfwayDir = normalize(lightDir + viewDir );
+  float spec = pow(max(dot(normal, halfwayDir), 0.0), material.shininess);
+  
+ 
+
+  float lightIntensity = clamp(0.025 + diff + spec ,0,1);
+
+
+   // get size of 3D texture
+   vec3 sizeOfTex = textureSize(textureArray, 0);
+
+    // texture coordinates by XY as position of fragment on the screen
+   // divided by width of the texture. So each pixel of the texture will
+   // correspond to pixel on the screen
+   vec2 texCoordXY = gl_FragCoord.xy/sizeOfTex.x;
+   // sample depth of the texture by light intensity
+   float texCoordZ = lightIntensity;
+
+   // sample 3D texture to get hatching intensity
+   //vec3 hatching = texture(u_colorTexture, vec3(texCoordXY, texCoordZ)).rgb;
+   vec3 hatching = texture(textureArray, vec3(texCoordXY,texCoordZ)).rgb;
+
+   //modulate hatching with lighting (not required)
+   color.rgb = hatching * (1.0 + lightIntensity * 2)/3;
+   color.a = 1;
+
+   /*color = vec4(1.0, 1.0, 1.0, 1.0);
+
+	if (lightIntensity < 0.85) 
+	{
+	   // hatch from left top corner to right bottom
+	   if (mod(gl_FragCoord.x + gl_FragCoord.y, 10.0) == 0.0) 
+	   {
+		  color = vec4(0.0, 0.0, 0.0, 1.0);
+	   }
+	}
+
+	if (lightIntensity < 0.75) 
+	{
+	   // hatch from right top corner to left boottom
+	   if (mod(gl_FragCoord.x - gl_FragCoord.y, 10.0) == 0.0) 
+	   {
+		  color = vec4(0.0, 0.0, 0.0, 1.0);
+	   }
+	}
+
+	if (lightIntensity < 0.5) 
+	{
+	   // hatch from left top to right bottom
+	   if (mod(gl_FragCoord.x + gl_FragCoord.y - 5.0, 10.0) == 0.0) 
+	   {
+		  color = vec4(0.0, 0.0, 0.0, 1.0);
+	   }
+	}
+
+	if (lightIntensity < 0.25) 
+	{
+	   // hatch from right top corner to left bottom
+	   if (mod(gl_FragCoord.x - gl_FragCoord.y - 5.0, 10.0) == 0.0) 
+	   {
+		  color = vec4(0.0, 0.0, 0.0, 1.0);
+	   }
+	}*/
+
+   
+ 
+}

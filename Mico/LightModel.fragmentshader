@@ -104,7 +104,7 @@ void main(){
   }
   else
   {
-  // I had to multiply by 0.5 because the using only the ambient light was not enough to 
+  // I had to multiply by 0.5 because using only the ambient light was not enough to 
   // influence the color of the  occluded pixels
   vec3 nColor = (ambient) * objectColor * vec3(0.5); 
      color = vec4(nColor,1.0);

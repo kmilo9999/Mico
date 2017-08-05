@@ -2,15 +2,17 @@
 #include <cassert>
 
 
-Texture::Texture(GLenum TextureTarget, const std::string& filename, bool is2D)
+Texture::Texture(GLenum TextureTarget, const std::string& filename)
 	: myTextureTarget(TextureTarget)
 	, myFileName(filename.c_str())
-	, myIs2D(is2D)
+	, myIs2D(true)
 {
    texture_id = Load2DTexture();
 }
 
-Texture::Texture(GLenum TextureTarget, std::vector<std::string> paths, bool is2D)
+Texture::Texture(GLenum TextureTarget, const std::vector<std::string>& paths)
+	: myTextureTarget(TextureTarget)
+	, myIs2D(false)
 {
 	texture_id = Load3DTexture(paths);
 }
@@ -51,7 +53,7 @@ int Texture::Load2DTexture()
 
 	// Read the file, call glTexImage2D with the right parameters
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height,
-		0, GL_BGR, GL_UNSIGNED_BYTE, bits);
+		0, GL_RGB, GL_UNSIGNED_BYTE, bits);
 	glGenerateMipmap(GL_TEXTURE_2D);
 
 	glBindTexture(GL_TEXTURE_2D, 0);
@@ -62,14 +64,13 @@ int Texture::Load2DTexture()
 
 int Texture::Load3DTexture(const std::vector<std::string>& paths)
 {
-	GLuint texture;
+	
 	if (paths.size() == 0)
 	{
 		assert(false && "no paths to load from");
-		return texture;
 	}
 
-	GLsizei width, height, depth = 0;
+	GLsizei width, height, depth = paths.size();
 
 	std::vector<image> formatedImages(paths.size());
 
@@ -77,48 +78,82 @@ int Texture::Load3DTexture(const std::vector<std::string>& paths)
 	for (int i = 0; i < paths.size(); ++i)
 	{
 		BYTE * bits(0);
-		if (!LoadTexture(myFileName, width, height, &bits))
+		if (!LoadTexture(paths[i], width, height, &bits))
 		{
 			assert(false && "Image failed to load 2");
 		}
 		image img(width, height, bits);
-		formatedImages.push_back(img);
+		formatedImages[i] = img;
 	}
 
-	// create empty 3D texture
+	//// create empty 3D texture
 
+	//GLuint textureID;
+	//glGenTextures(1, &textureID);
+	//glBindTexture(GL_TEXTURE_3D, textureID);
+	//glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	//glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	//glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	//glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	//glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+	//// allocate memory for 3D texture
+	//glTexImage3D(GL_TEXTURE_3D, 0, GL_RGB, width,
+	//	height, depth, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+
+
+	//// copy image data to each layer of 3D texture
+
+	//for (int i = 0; i < formatedImages.size() ; ++i)
+	//{
+	//	glTexSubImage3D(
+	//		GL_TEXTURE_3D, 0,
+	//		0, 0, (GLint)i,
+	//		formatedImages[i].imageWidth, formatedImages[i].imageHeight, 1,
+	//		GL_RGB, GL_UNSIGNED_BYTE,
+	//		formatedImages[i].imageData
+	//	);
+	//}
+
+
+	//glGenerateMipmap(GL_TEXTURE_3D);
+	//glBindTexture(GL_TEXTURE_3D, 0);
+	
+	
 	GLuint textureID;
 	glGenTextures(1, &textureID);
-	glBindTexture(GL_TEXTURE_3D, textureID);
-	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+	glBindTexture(GL_TEXTURE_2D_ARRAY, textureID);
+	//Create storage for the texture. (100 layers of 1x1 texels)
+	glTexStorage3D(GL_TEXTURE_2D_ARRAY,
+		1,                    //No mipmaps as textures are 1x1
+		GL_RGB,              //Internal format
+		width, height,                 //width,height
+		depth                   //Number of layers
+	);
 
-	// allocate memory for 3D texture
-	glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, width,
-		height, depth, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-
-
-	// copy image data to each layer of 3D texture
-
-	for (int i = 0; i < formatedImages.size() ; ++i)
+	for (unsigned int i = 0 ;  i < formatedImages.size(); ++i)
 	{
-		glTexSubImage3D(
-			GL_TEXTURE_3D, 0,
-			0, 0, (GLint)i,
-			width, height, 1,
-			GL_RGBA, GL_UNSIGNED_BYTE,
-			formatedImages[i].imageData
-		);
+		
+
+		//Specify i-essim image
+		glTexSubImage3D(GL_TEXTURE_2D_ARRAY,
+			0,                     //Mipmap number
+			0, 0, i,                 //xoffset, yoffset, zoffset
+			formatedImages[i].imageWidth, formatedImages[i].imageHeight, 1,                 //width, height, depth
+			GL_RGB,                //format
+			GL_UNSIGNED_BYTE,      //type
+			formatedImages[i].imageData);                //pointer to data
 	}
 
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-	glGenerateMipmap(GL_TEXTURE_3D);
-	glBindTexture(GL_TEXTURE_3D, 0);
-
-
+	
+	glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
+	// Return the ID of the texture we just created
+	return textureID;
 }
 
 bool Texture::LoadTexture(const std::string& fileName, int& width, int& height, unsigned char ** data)
@@ -131,11 +166,11 @@ bool Texture::LoadTexture(const std::string& fileName, int& width, int& height, 
 
 	GLuint gl_texID;
 	//check the file signature and deduce its format
-	fif = FreeImage_GetFileType(myFileName, 0);
+	fif = FreeImage_GetFileType(fileName.c_str(), 0);
 	//if still unknown, try to guess the file format from the file extension
 	if (fif == FIF_UNKNOWN)
 	{
-		fif = FreeImage_GetFIFFromFilename(myFileName);
+		fif = FreeImage_GetFIFFromFilename(fileName.c_str());
 	}
 
 
@@ -148,7 +183,7 @@ bool Texture::LoadTexture(const std::string& fileName, int& width, int& height, 
 
 	//check that the plugin has reading capabilities and load the file
 	if (FreeImage_FIFSupportsReading(fif))
-		dib = FreeImage_Load(fif, myFileName);
+		dib = FreeImage_Load(fif, fileName.c_str());
 
 	height = FreeImage_GetHeight(dib);
 	width = FreeImage_GetWidth(dib);

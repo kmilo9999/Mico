@@ -225,6 +225,8 @@
     <ClInclude Include="WindowSystem.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Hatching.fragmentshader" />
+    <None Include="Hatching.vertexshader" />
     <None Include="LightModel.fragmentshader" />
     <None Include="LightModel.vertexshader" />
     <None Include="NormalLines.fragmentshader" />

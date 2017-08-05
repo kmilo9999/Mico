@@ -280,5 +280,11 @@
     <None Include="quad.vertexshader">
       <Filter>shaders</Filter>
     </None>
+    <None Include="Hatching.fragmentshader">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="Hatching.vertexshader">
+      <Filter>shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

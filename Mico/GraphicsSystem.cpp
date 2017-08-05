@@ -1,4 +1,4 @@
-#include "GraphicsSystem.h"
+﻿#include "GraphicsSystem.h"
 #include <iostream>
 #include <cassert>
 #include <GLFW\glfw3.h>
@@ -12,7 +12,7 @@
 #include "GraphicsComponent.h"
 #include "FBO.h"
 
-GraphicsSystem::GraphicsSystem(vec2 windowSize) 
+GraphicsSystem::GraphicsSystem(vec2 windowSize)
 	: mouseSelectedEntity(nullptr)
 	, hasSelectedEntity(false)
 	, lastMousePosition(0.0f, 0.0f)
@@ -20,20 +20,17 @@ GraphicsSystem::GraphicsSystem(vec2 windowSize)
 	, ambientColor(0.5)
 {
 	this->windowSize = windowSize;
-	
+
 }
 
 
 GraphicsSystem::~GraphicsSystem()
 {
-	if (light)
-	{
-		delete light;
-	}
-	if (terrain)
-	{
-		delete terrain;
-	}
+
+	delete light;
+	delete terrain;
+	delete hatchingTexture;
+
 }
 
 void GraphicsSystem::Init()
@@ -44,17 +41,26 @@ void GraphicsSystem::Init()
 		getchar();
 		assert(false && "Failed to Initlialize Opengl");
 	}
-	
+
+	int major = 0;
+	int minor = 0;
+	glGetIntegerv(GL_MAJOR_VERSION, &major);
+	glGetIntegerv(GL_MINOR_VERSION, &minor);
+
+	cout << "OpenGL minor version: " << minor << endl;
+	cout << "OpenGL major version: " << major << endl;
+
 	window = WINDOWSYSTEM->GetWindow();
-	camera = new Camera(vec3(0,12,8),vec3(0,0,-1));
+	camera = new Camera(vec3(0, 12, 8), vec3(0, 0, -1));
 	InputHandler::GetInstance()->addObserver(camera);
 	InputHandler::GetInstance()->addObserver(this);
 
 	lightModelShader.LoadShaders("LightModel.vertexshader", "LightModel.fragmentshader");
 	simpleShader.LoadShaders("Simple.vertexshader", "Simple.fragmentshader");
-	terrainShader.LoadShaders("Terrain.vertexshader","Terrain.fragmentshader");
+	terrainShader.LoadShaders("Terrain.vertexshader", "Terrain.fragmentshader");
 	linesShader.LoadShaders("NormalLines.vertexshader", "NormalLines.fragmentshader");
-	shadowShader.LoadShaders("Shadows.vertexshader","Shadows.fragmentshader");
+	shadowShader.LoadShaders("Shadows.vertexshader", "Shadows.fragmentshader");
+	hatching.LoadShaders("Hatching.vertexshader", "Hatching.fragmentshader");
 
 	lightModelShader.addUniform("ProjectionMatrix");
 	lightModelShader.addUniform("ViewMatrix");
@@ -72,9 +78,6 @@ void GraphicsSystem::Init()
 	lightModelShader.addUniform("shadowMap");
 	lightModelShader.addUniform("ShadowMatrix");
 	lightModelShader.addUniform("isGround");
-
-	
-	//lightModelShader.addUniform("shadowMap");
 
 	simpleShader.addUniform("ProjectionMatrix");
 	simpleShader.addUniform("ViewMatrix");
@@ -104,6 +107,25 @@ void GraphicsSystem::Init()
 	renderToQuadShader.addUniform("screenTexture");
 
 
+	hatching.addUniform("ProjectionMatrix");
+	hatching.addUniform("ViewMatrix");
+	hatching.addUniform("ModelMatrix");
+	hatching.addUniform("light.position");
+	hatching.addUniform("light.ambient");
+	hatching.addUniform("light.diffuse");
+	hatching.addUniform("light.specular");
+	hatching.addUniform("ViewPos");
+
+	// Load 3D texture
+	vector<string> texturesVector;
+	texturesVector.push_back("../Resources/Textures/hatching/hatching_1.png");
+	texturesVector.push_back("../Resources/Textures/hatching/hatching_2.png");
+	texturesVector.push_back("../Resources/Textures/hatching/hatching_3.png");
+	texturesVector.push_back("../Resources/Textures/hatching/hatching_4.png");
+	texturesVector.push_back("../Resources/Textures/hatching/hatching_5.png");
+	texturesVector.push_back("../Resources/Textures/hatching/hatching_6.png");
+	hatchingTexture = new Texture(GL_TEXTURE_2D_ARRAY, texturesVector);
+
 	/* Render to quad init*/
 
 	float quadVertices[] = {
@@ -117,7 +139,7 @@ void GraphicsSystem::Init()
 		1.0f,  1.0f,  1.0f, 1.0f
 	};
 
-	
+
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
 	glBindVertexArray(VAO);
@@ -137,15 +159,16 @@ void GraphicsSystem::Update()
 	projection = glm::perspective(camera->foV, windowSize.x / windowSize.y, 0.1f, 1000.0f);
 	light->Update();
 	terrain->Update();
-	
+
 	ShadowPass();
-	
-	
+
+
 
 	InitRender();
 	//RenderTextureToQuad(*shadowObjet.shadowFbo());
 
-	LightModelPass();
+	//LightModelPass();
+	HatchingPass();
 
 	//if (showNormals)
 	//{
@@ -154,7 +177,7 @@ void GraphicsSystem::Update()
 	RenderGlobalLight();
 	/*
 	RenderSelectedVolumen();*/
-	
+
 }
 
 std::string GraphicsSystem::className()
@@ -166,91 +189,91 @@ void GraphicsSystem::onNotify(Event & evt)
 {
 	switch (evt.type)
 	{
-		case Event::Resized:
-			windowSize.x = evt.size.width;
-			windowSize.y = evt.size.height;
-			break;
-		case Event::MouseButtonPressed:
-			switch (evt.mouseButton.button)
+	case Event::Resized:
+		windowSize.x = evt.size.width;
+		windowSize.y = evt.size.height;
+		break;
+	case Event::MouseButtonPressed:
+		switch (evt.mouseButton.button)
+		{
+		case GLFW_MOUSE_BUTTON_LEFT:
+			vec3 ray = RayCast(evt.mouseButton.x, evt.mouseButton.y);
+			//cout << ray.x << "," << ray.y << "," << ray.z << endl;
+			mouseSelectedEntity = TestRayEntityIntersection(ray);
+			if (mouseSelectedEntity)
 			{
-			 case GLFW_MOUSE_BUTTON_LEFT:
-				 vec3 ray = RayCast(evt.mouseButton.x, evt.mouseButton.y);
-				 //cout << ray.x << "," << ray.y << "," << ray.z << endl;
-				 mouseSelectedEntity = TestRayEntityIntersection(ray);
-				 if(mouseSelectedEntity)
-				 { 
-					 hasSelectedEntity = true;
-				 }
-				 else
-				 {
-					 hasSelectedEntity = false;
-				 }
-				// TestRayFarPlanesIntersection(ray);
-				break;
-			};
-		    break;
-		case Event::MouseMoved:
-			{
-				if (!hasSelectedEntity)
-				{
-					lastMousePosition.x = evt.mouseMove.x;
-					lastMousePosition.y = evt.mouseMove.y;
-					break;
-				}
-				if (hasSelectedEntity)
-				{
-					vec3 rightVector = normalize(cross(camera->front, camera->up))*0.06f;
-					vec3 upvector = normalize(camera->up)*0.06f;
-					float deltaX = (evt.mouseMove.x - lastMousePosition.x);
-					float deltaY = (evt.mouseMove.y - lastMousePosition.y);
-					TransformationComponent* transform = dynamic_cast<TransformationComponent*>(mouseSelectedEntity->GetComponent("TransformationComponent"));
-					vec3 newPosition = transform->GetPosition();
-					float absolutX = abs(deltaX);
-					float absolutY = abs(deltaY);
-
-					if (deltaX && deltaX < 0 &&   absolutX > 2.5)
-					{
-						newPosition -=  rightVector;
-					}
-					else if(deltaX && deltaX > 0 && absolutX > 2.5)
-					{
-						newPosition +=   rightVector;
-					}
-
-					if (deltaY && deltaY < 0 && absolutY > 2.5)
-					{
-						newPosition +=  upvector;
-					}
-					else if (deltaY && deltaY > 0 && absolutY > 2.5)
-					{
-						newPosition -= upvector;
-					}
-					transform->SetPosition(newPosition);
-					lastMousePosition.x = evt.mouseMove.x;
-					lastMousePosition.y = evt.mouseMove.y;
-				}
+				hasSelectedEntity = true;
 			}
-			break;
-		case Event::MouseButtonReleased:
-			switch (evt.mouseButton.button)
+			else
 			{
-			case GLFW_MOUSE_BUTTON_LEFT:
 				hasSelectedEntity = false;
-				break;
-			};
-			break;
-		case Event::UI:
-			switch (evt.ui.type)
-			{
-			  case Event::ShowNormals:
-				  showNormals = evt.ui.value.boolValue;
-				  break;
-			  default:
-				  break;
 			}
+			// TestRayFarPlanesIntersection(ray);
+			break;
+		};
+		break;
+	case Event::MouseMoved:
+	{
+		if (!hasSelectedEntity)
+		{
+			lastMousePosition.x = evt.mouseMove.x;
+			lastMousePosition.y = evt.mouseMove.y;
+			break;
+		}
+		if (hasSelectedEntity)
+		{
+			vec3 rightVector = normalize(cross(camera->front, camera->up))*0.06f;
+			vec3 upvector = normalize(camera->up)*0.06f;
+			float deltaX = (evt.mouseMove.x - lastMousePosition.x);
+			float deltaY = (evt.mouseMove.y - lastMousePosition.y);
+			TransformationComponent* transform = dynamic_cast<TransformationComponent*>(mouseSelectedEntity->GetComponent("TransformationComponent"));
+			vec3 newPosition = transform->GetPosition();
+			float absolutX = abs(deltaX);
+			float absolutY = abs(deltaY);
+
+			if (deltaX && deltaX < 0 && absolutX > 2.5)
+			{
+				newPosition -= rightVector;
+			}
+			else if (deltaX && deltaX > 0 && absolutX > 2.5)
+			{
+				newPosition += rightVector;
+			}
+
+			if (deltaY && deltaY < 0 && absolutY > 2.5)
+			{
+				newPosition += upvector;
+			}
+			else if (deltaY && deltaY > 0 && absolutY > 2.5)
+			{
+				newPosition -= upvector;
+			}
+			transform->SetPosition(newPosition);
+			lastMousePosition.x = evt.mouseMove.x;
+			lastMousePosition.y = evt.mouseMove.y;
+		}
+	}
+	break;
+	case Event::MouseButtonReleased:
+		switch (evt.mouseButton.button)
+		{
+		case GLFW_MOUSE_BUTTON_LEFT:
+			hasSelectedEntity = false;
+			break;
+		};
+		break;
+	case Event::UI:
+		switch (evt.ui.type)
+		{
+		case Event::ShowNormals:
+			showNormals = evt.ui.value.boolValue;
 			break;
 		default:
 			break;
+		}
+		break;
+	default:
+		break;
 
 
 	}
@@ -258,7 +281,7 @@ void GraphicsSystem::onNotify(Event & evt)
 
 void GraphicsSystem::InitRender()
 {
-	
+
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
 	//glCullFace(GL_BACK);
@@ -267,7 +290,7 @@ void GraphicsSystem::InitRender()
 	glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	
+
 }
 
 void GraphicsSystem::InitScene()
@@ -278,8 +301,8 @@ void GraphicsSystem::InitScene()
 	light->SetDiffuse(vec3(0.5));
 	light->SetSpecular(vec3(1.0f));
 
-	TransformationComponent* lightTransformation = 
-		new TransformationComponent(vec3(1.0f,28.0f,0.3f),quat(), vec3(0.3f, 0.3f, 0.3f));
+	TransformationComponent* lightTransformation =
+		new TransformationComponent(vec3(1.0f, 28.0f, 0.3f), quat(), vec3(0.3f, 0.3f, 0.3f));
 	light->AddComponent(lightTransformation);
 
 	Texture* targetTtexture = new Texture(GL_TEXTURE_2D, "../Resources/Textures/texture_sample.jpg");
@@ -288,7 +311,7 @@ void GraphicsSystem::InitScene()
 	GraphicsComponent* graphics = new GraphicsComponent(EntityManager::GetInstance()->GetModel("cube"), material);
 	light->AddComponent(graphics);
 
-	SelectableBoundingVolumen* boundingVolumen = new BoundingSphere( 0.7f);
+	SelectableBoundingVolumen* boundingVolumen = new BoundingSphere(0.7f);
 	boundingVolumen->SetModel(EntityManager::GetInstance()->GetModel("sphere"));
 	light->AddComponent(boundingVolumen);
 
@@ -298,7 +321,7 @@ void GraphicsSystem::InitScene()
 	light->Initialize();
 
 	terrain = new Terrain(0.0f, 0.0f);
-	
+
 
 }
 
@@ -310,11 +333,11 @@ void GraphicsSystem::FinishRender()
 
 void GraphicsSystem::RenderEntities()
 {
-	
+
 	TransformationComponent* lightTransform = dynamic_cast<TransformationComponent*>(light->GetComponent("TransformationComponent"));
 	if (lightTransform)
 	{
-		
+
 		lightModelShader.start();
 		lightModelShader.setUniform("ProjectionMatrix", projection);
 		lightModelShader.setUniform("ViewMatrix", camera->GetView());
@@ -352,7 +375,7 @@ void GraphicsSystem::RenderEntities()
 					lightModelShader.setUniformi("hasTexture", 1);
 				}
 				else
-				{ 
+				{
 					lightModelShader.setUniformi("hasTexture", 0);
 				}
 
@@ -369,7 +392,7 @@ void GraphicsSystem::RenderEntities()
 		}
 		lightModelShader.stop();
 	}
-	
+
 }
 
 void GraphicsSystem::RenderGlobalLight()
@@ -385,14 +408,14 @@ void GraphicsSystem::RenderGlobalLight()
 
 	lightGraphics->Draw(simpleShader);
 	simpleShader.stop();
-	
+
 
 }
 
 void GraphicsSystem::RenderTerrain()
 {
 	TransformationComponent* lightTransform = dynamic_cast<TransformationComponent*>(light->GetComponent("TransformationComponent"));
-	
+
 	if (lightTransform)
 	{
 		lightModelShader.start();
@@ -453,11 +476,11 @@ void GraphicsSystem::RenderNormals()
 			linesShader.setUniform("ModelMatrix", modelMatrix);
 			model->DrawNormals();
 
-			
+
 			model->UnBind();
 		}
-		
-		
+
+
 	}
 	linesShader.stop();
 }
@@ -466,12 +489,12 @@ void GraphicsSystem::ShadowPass()
 {
 	shadowShader.start();
 	shadowObjet.shadowFbo()->Bind();
-	
-	
+
+
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	
+
 	glViewport(0, 0, 1024, 1024);
-	
+
 
 	vec3 up = vec3(0.0, 1.0, 0.0);
 	TransformationComponent* lightTransform = dynamic_cast<TransformationComponent*>(light->GetComponent("TransformationComponent"));
@@ -482,16 +505,16 @@ void GraphicsSystem::ShadowPass()
 	glm::mat4 lightProjection = frustum(-lw, lw, -lh, lh, near_plane, far_plane);
 
 	mat4x4 lightPOV = lookAt(lightTransform->GetPosition(), vec3(0, 0, 0), up);
-	shadowShader.setUniform("ViewMatrix",lightPOV );
+	shadowShader.setUniform("ViewMatrix", lightPOV);
 	shadowShader.setUniform("ProjectionMatrix", lightProjection);
-	
+
 	shadowObjet.setShadowProjectionMatrix(lightProjection);
 
 	//Render Terrain
 	Entity* terrainEntity = dynamic_cast<Entity*>(terrain);
 	GraphicsComponent* terrainGraphicsComponent = dynamic_cast<GraphicsComponent*>(terrainEntity->GetComponent("GraphicsComponent"));
 	terrainGraphicsComponent->Draw(shadowShader);
-	
+
 	//Render models
 	vector<Entity*>::iterator it = EntityManager::GetInstance()->GetEntities().begin();
 	vector<Entity*>::iterator end = EntityManager::GetInstance()->GetEntities().end();
@@ -504,10 +527,10 @@ void GraphicsSystem::ShadowPass()
 		}
 	}
 
-	
+
 	shadowObjet.shadowFbo()->Unbind();
 	shadowShader.stop();
-	
+
 }
 
 void GraphicsSystem::LightModelPass()
@@ -516,34 +539,86 @@ void GraphicsSystem::LightModelPass()
 	RenderEntities();
 }
 
+void GraphicsSystem::HatchingPass()
+{
+
+	//! Fetch the 3D Texture
+	hatchingTexture->Bind(0);
+
+
+	//light pass
+	TransformationComponent* lightTransform = dynamic_cast<TransformationComponent*>(light->GetComponent("TransformationComponent"));
+
+	if (lightTransform)
+	{
+		hatching.start();
+		hatching.setUniform("ProjectionMatrix", projection);
+		hatching.setUniform("ViewMatrix", camera->GetView());
+		hatching.setUniform("light.position", lightTransform->GetPosition());
+		hatching.setUniform("light.ambient", light->GetAmbient());
+		hatching.setUniform("light.diffuse", light->GetDiffuse());
+		hatching.setUniform("light.specular", light->GetSpecular());
+		hatching.setUniform("ViewPos", camera->position);
+
+		Entity* terrainEntity = dynamic_cast<Entity*>(terrain);
+		GraphicsComponent* terrainGraphicsComponent = dynamic_cast<GraphicsComponent*>(terrainEntity->GetComponent("GraphicsComponent"));
+
+		Material* material = terrainGraphicsComponent->GetMaterial();
+		hatching.setUniform("material.ambient", ambientColor);
+		hatching.setUniform("material.diffuse", material->GetDiffuse());
+		hatching.setUniform("material.specular", material->GetSpecular());
+		hatching.setUniformf("material.shininess", material->GetShinines());
+
+		terrainGraphicsComponent->Draw(hatching);
+
+		vector<Entity*>::iterator it = EntityManager::GetInstance()->GetEntities().begin();
+		vector<Entity*>::iterator end = EntityManager::GetInstance()->GetEntities().end();
+		for (; it != end; ++it)
+		{
+			GraphicsComponent* entityGraphicsComponent = dynamic_cast<GraphicsComponent*>((*it)->GetComponent("GraphicsComponent"));
+			if (entityGraphicsComponent)
+			{
+				hatching.setUniform("material.ambient", ambientColor);
+				hatching.setUniform("material.diffuse", material->GetDiffuse());
+				hatching.setUniform("material.specular", material->GetSpecular());
+				hatching.setUniformf("material.shininess", material->GetShinines());
+				entityGraphicsComponent->Draw(hatching);
+			}
+		}
+
+		hatching.stop();
+	}
+
+}
+
 void GraphicsSystem::RenderSelectedVolumen()
 {
 	if (mouseSelectedEntity)
 	{
-			
-			TransformationComponent* transformation = 
-				dynamic_cast<TransformationComponent*>(mouseSelectedEntity->GetComponent(
-				   "TransformationComponent"));
 
-			BoundingSphere* boundingVolumen =
-				dynamic_cast<BoundingSphere*>(mouseSelectedEntity->GetComponent(
-					"BoundingVolumen"));
+		TransformationComponent* transformation =
+			dynamic_cast<TransformationComponent*>(mouseSelectedEntity->GetComponent(
+				"TransformationComponent"));
 
-			glEnable(GL_BLEND);
-			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-			simpleShader.start();
-			simpleShader.setUniform("ProjectionMatrix", projection);
-			simpleShader.setUniform("ViewMatrix", camera->GetView());
-			simpleShader.setUniform("ModelMatrix", 
-				Math::CreateTransformationMatrix(transformation->GetPosition(), 
-					quat(), vec3(boundingVolumen->GetRadius(), boundingVolumen->GetRadius(),
-						boundingVolumen->GetRadius())));
-			simpleShader.setUniform("LightColor", vec4(0.5, 0.0, 0.5, 0.4));
-			boundingVolumen->GetModel()->Draw();
-			simpleShader.stop();
-			glDisable(GL_BLEND);
+		BoundingSphere* boundingVolumen =
+			dynamic_cast<BoundingSphere*>(mouseSelectedEntity->GetComponent(
+				"BoundingVolumen"));
+
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		simpleShader.start();
+		simpleShader.setUniform("ProjectionMatrix", projection);
+		simpleShader.setUniform("ViewMatrix", camera->GetView());
+		simpleShader.setUniform("ModelMatrix",
+			Math::CreateTransformationMatrix(transformation->GetPosition(),
+				quat(), vec3(boundingVolumen->GetRadius(), boundingVolumen->GetRadius(),
+					boundingVolumen->GetRadius())));
+		simpleShader.setUniform("LightColor", vec4(0.5, 0.0, 0.5, 0.4));
+		boundingVolumen->GetModel()->Draw();
+		simpleShader.stop();
+		glDisable(GL_BLEND);
 	}
-	
+
 
 }
 
@@ -574,7 +649,7 @@ void GraphicsSystem::RenderTextureToQuad(Fbo& frameBuffer)
 	glBindTexture(GL_TEXTURE_2D, frameBuffer.texture);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 	renderToQuadShader.stop();
-	
+
 }
 
 void GraphicsSystem::SetGlobalLight(GlobalLight* light)
@@ -588,9 +663,9 @@ vec3 GraphicsSystem::RayCast(float mouse_x, float mouse_y)
 		1.0f - (2.0f *  mouse_y) / windowSize.y, -1.0, 1.0);
 	mat4 projection = perspective(camera->foV, windowSize.x / windowSize.y, 0.1f, 1000.0f);
 	vec4 rayEye = inverse(projection) * rayClip;
-	rayEye.z = -1.0f; 
+	rayEye.z = -1.0f;
 	rayEye.w = 0.0f;
-	mat4 view = camera->GetView() ;
+	mat4 view = camera->GetView();
 	mat4 invView = inverse(view);
 	vec4 temp = invView*rayEye;
 	vec3 rayWorld(temp.x, temp.y, temp.z);

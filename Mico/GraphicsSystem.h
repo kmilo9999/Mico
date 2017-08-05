@@ -32,6 +32,7 @@ public:
 	void RenderNormals();
 	void ShadowPass();
 	void LightModelPass();
+	void HatchingPass();
 	
 	void SetGlobalLight(GlobalLight* light);
 
@@ -52,6 +53,7 @@ private:
 	ShaderProgram linesShader;
 	ShaderProgram shadowShader;
 	ShaderProgram renderToQuadShader;
+	ShaderProgram hatching;
 	
 	ShadowObject shadowObjet;
 
@@ -63,6 +65,8 @@ private:
 
 	Entity* mouseSelectedEntity;
 	Terrain* terrain;
+	Texture* hatchingTexture;
+
 	bool hasSelectedEntity;
 	vec2 lastMousePosition;
 	bool showNormals;
