@@ -28,7 +28,7 @@ uniform vec3 ViewPos;
 
 // sampler for 3D texture
 //uniform sampler3D u_colorTexture;
-layout (binding=0) uniform sampler2DArray textureArray;
+uniform sampler2DArray textureArray;
 
 void main(){
   
@@ -59,11 +59,12 @@ void main(){
    float texCoordZ = lightIntensity;
 
    // sample 3D texture to get hatching intensity
-   //vec3 hatching = texture(u_colorTexture, vec3(texCoordXY, texCoordZ)).rgb;
    vec3 hatching = texture(textureArray, vec3(texCoordXY,texCoordZ)).rgb;
 
    //modulate hatching with lighting (not required)
-   color.rgb = hatching * (1.0 + lightIntensity * 2)/3;
+	color.rgb = hatching * (1.0 + lightIntensity * 2)/3;
+   //color.rgb = vec3(sizeOfTex.z/1,0,0);
+   //color.rgb = hatching;
    color.a = 1;
 
    /*color = vec4(1.0, 1.0, 1.0, 1.0);

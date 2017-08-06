@@ -118,12 +118,12 @@ void GraphicsSystem::Init()
 
 	// Load 3D texture
 	vector<string> texturesVector;
-	texturesVector.push_back("../Resources/Textures/hatching/hatching_1.png");
-	texturesVector.push_back("../Resources/Textures/hatching/hatching_2.png");
-	texturesVector.push_back("../Resources/Textures/hatching/hatching_3.png");
-	texturesVector.push_back("../Resources/Textures/hatching/hatching_4.png");
-	texturesVector.push_back("../Resources/Textures/hatching/hatching_5.png");
-	texturesVector.push_back("../Resources/Textures/hatching/hatching_6.png");
+	texturesVector.push_back("../Resources/Textures/hatching/hatching2_1.jpg");
+	texturesVector.push_back("../Resources/Textures/hatching/hatching2_2.jpg");
+	texturesVector.push_back("../Resources/Textures/hatching/hatching2_3.jpg");
+	texturesVector.push_back("../Resources/Textures/hatching/hatching2_4.jpg");
+	texturesVector.push_back("../Resources/Textures/hatching/hatching2_5.jpg");
+	texturesVector.push_back("../Resources/Textures/hatching/hatching2_6.jpg");
 	hatchingTexture = new Texture(GL_TEXTURE_2D_ARRAY, texturesVector);
 
 	/* Render to quad init*/
@@ -541,11 +541,6 @@ void GraphicsSystem::LightModelPass()
 
 void GraphicsSystem::HatchingPass()
 {
-
-	//! Fetch the 3D Texture
-	hatchingTexture->Bind(0);
-
-
 	//light pass
 	TransformationComponent* lightTransform = dynamic_cast<TransformationComponent*>(light->GetComponent("TransformationComponent"));
 
@@ -562,6 +557,13 @@ void GraphicsSystem::HatchingPass()
 
 		Entity* terrainEntity = dynamic_cast<Entity*>(terrain);
 		GraphicsComponent* terrainGraphicsComponent = dynamic_cast<GraphicsComponent*>(terrainEntity->GetComponent("GraphicsComponent"));
+		
+
+		
+	    //! Fetch the 3D Texture
+        hatchingTexture->Bind(0);
+		hatching.setUniformi("textureArray", 0);
+
 
 		Material* material = terrainGraphicsComponent->GetMaterial();
 		hatching.setUniform("material.ambient", ambientColor);
@@ -582,6 +584,10 @@ void GraphicsSystem::HatchingPass()
 				hatching.setUniform("material.diffuse", material->GetDiffuse());
 				hatching.setUniform("material.specular", material->GetSpecular());
 				hatching.setUniformf("material.shininess", material->GetShinines());
+
+				//! Fetch the 3D Texture
+				hatchingTexture->Bind(0);
+				hatching.setUniformi("textureArray", 0);
 				entityGraphicsComponent->Draw(hatching);
 			}
 		}

@@ -9,6 +9,8 @@ Terrain::Terrain(float x, float z):X(x),Z(z)
 	
 	EntityId = 1000;
 	Texture* texture = new Texture(GL_TEXTURE_2D, "../Resources/Textures/texture_sample.jpg");
+	//Texture* texture = new Texture(GL_TEXTURE_2D, "../Resources/Textures/hatching/hatching_6.jpg");
+	
 	TexturedModel* model = new TexturedModel(GenerateTerrain());
 
 	// The terrain is not doing any light calcultations. I just put the  material becasue 

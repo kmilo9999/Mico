@@ -126,15 +126,13 @@ int Texture::Load3DTexture(const std::vector<std::string>& paths)
 	//Create storage for the texture. (100 layers of 1x1 texels)
 	glTexStorage3D(GL_TEXTURE_2D_ARRAY,
 		1,                    //No mipmaps as textures are 1x1
-		GL_RGB,              //Internal format
+		GL_RGBA8,              //Internal format
 		width, height,                 //width,height
 		depth                   //Number of layers
 	);
 
 	for (unsigned int i = 0 ;  i < formatedImages.size(); ++i)
 	{
-		
-
 		//Specify i-essim image
 		glTexSubImage3D(GL_TEXTURE_2D_ARRAY,
 			0,                     //Mipmap number
@@ -147,8 +145,8 @@ int Texture::Load3DTexture(const std::vector<std::string>& paths)
 
 	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
 	
 	glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
