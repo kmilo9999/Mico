@@ -1,0 +1,30 @@
+#version 430 core
+layout(triangles) in;
+layout(triangles, max_vertices = 3) out;
+
+// constant values for the whole mesh.
+uniform mat4 ModelMatrix;
+uniform mat4 ViewMatrix;
+uniform mat4 ProjectionMatrix;
+uniform vec3 lightPos;
+
+void main(){
+
+  vec3 P0 = gl_in[0].gl_Position.xyz;
+  vec3 P1 = gl_in[1].gl_Position.xyz;
+  vec3 P2 = gl_in[2].gl_Position.xyz;
+
+  vec3 V0 = P1 - P0;
+  vec3 V1 = P2 - P0;
+  vec3 N = cross(V0, V1);
+  
+  N = normalize(N);
+  
+  // Center of the triangle
+  vec3 P = (P0+P1+P2) / 3.0;
+  vec3 L = lightPos - P;
+
+  vec3  B  = normalize(L - N * )
+
+
+}
