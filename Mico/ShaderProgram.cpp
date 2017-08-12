@@ -11,17 +11,35 @@ ShaderProgram::ShaderProgram():progarmId(0)
 }
 
 
-void ShaderProgram::LoadShaders(const char * vertex_filenname, const char * fragment_filename)
+void ShaderProgram::LoadShaders(const char * vertex_filenname, const char * fragment_filename, const char* geometry_file)
 {
 	int vertexShaderID = LoadShader(vertex_filenname, GL_VERTEX_SHADER);
+
+
+	int geometryShaderID = 0;
+	if (geometry_file)
+	{
+		geometryShaderID = LoadShader(geometry_file, GL_GEOMETRY_SHADER);
+	}
+
 	int fragmentShaderID = LoadShader(fragment_filename, GL_FRAGMENT_SHADER);
+
+
 	int IsLinked;
 	// Link the program
 	printf("Linking program\n");
 	
 	progarmId = glCreateProgram();
+
 	glAttachShader(progarmId, vertexShaderID);
+	if (geometryShaderID)
+	{
+		glAttachShader(progarmId, geometryShaderID);
+	}
 	glAttachShader(progarmId, fragmentShaderID);
+
+	
+	
 
 	glBindAttribLocation(progarmId, 0, "vertexPosition");
 	glBindAttribLocation(progarmId, 1, "texCoord");
@@ -42,9 +60,17 @@ void ShaderProgram::LoadShaders(const char * vertex_filenname, const char * frag
 
 	glDetachShader(progarmId, vertexShaderID);
 	glDetachShader(progarmId, fragmentShaderID);
+	if (geometryShaderID)
+	{
+		glDetachShader(progarmId, geometryShaderID);
+	}
 
 	glDeleteShader(vertexShaderID);
 	glDeleteShader(fragmentShaderID);
+	if (geometryShaderID)
+	{
+		glDeleteShader(geometryShaderID);
+	}
 
 
 }

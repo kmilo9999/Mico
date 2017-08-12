@@ -230,6 +230,7 @@
     <None Include="LightModel.fragmentshader" />
     <None Include="LightModel.vertexshader" />
     <None Include="NormalLines.fragmentshader" />
+    <None Include="NormalLines.geometryshader" />
     <None Include="NormalLines.vertexshader" />
     <None Include="quad.fragmentshader" />
     <None Include="quad.vertexshader" />

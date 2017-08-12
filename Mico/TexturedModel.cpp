@@ -63,7 +63,7 @@ void TexturedModel::Draw()
 void TexturedModel::DrawNormals()
 {
 	//glDisable(GL_DEPTH_TEST);
-	glBindVertexArray(myModel->getNormalsVAO());
+	glBindVertexArray(myModel->getNormalsVBO());
 	glDrawArrays(GL_LINES, 0, myModel->getNormalsCount());
 	glBindVertexArray(0);
 	//glEnable(GL_DEPTH_TEST);

@@ -58,7 +58,8 @@ void GraphicsSystem::Init()
 	lightModelShader.LoadShaders("LightModel.vertexshader", "LightModel.fragmentshader");
 	simpleShader.LoadShaders("Simple.vertexshader", "Simple.fragmentshader");
 	terrainShader.LoadShaders("Terrain.vertexshader", "Terrain.fragmentshader");
-	linesShader.LoadShaders("NormalLines.vertexshader", "NormalLines.fragmentshader");
+	//NormalRenderShader.LoadShaders("NormalLines.vertexshader", "NormalLines.fragmentshader");
+	NormalRenderShader.LoadShaders("NormalLines.vertexshader", "NormalLines.fragmentshader", "NormalLines.geometryshader");
 	shadowShader.LoadShaders("Shadows.vertexshader", "Shadows.fragmentshader");
 	hatching.LoadShaders("Hatching.vertexshader", "Hatching.fragmentshader");
 
@@ -90,9 +91,9 @@ void GraphicsSystem::Init()
 	terrainShader.addUniform("shadowMap");
 	terrainShader.addUniform("ShadowMatrix");
 
-	linesShader.addUniform("ProjectionMatrix");
-	linesShader.addUniform("ViewMatrix");
-	linesShader.addUniform("ModelMatrix");
+	NormalRenderShader.addUniform("ProjectionMatrix");
+	NormalRenderShader.addUniform("ViewMatrix");
+	NormalRenderShader.addUniform("ModelMatrix");
 
 	Fbo* shadowframeBuffer = new Fbo();
 	shadowframeBuffer->CreateFBO(1024, 1024);
@@ -160,20 +161,21 @@ void GraphicsSystem::Update()
 	light->Update();
 	terrain->Update();
 
-	ShadowPass();
+	//ShadowPass();
 
 
 
 	InitRender();
 	//RenderTextureToQuad(*shadowObjet.shadowFbo());
 
-	//LightModelPass();
-	HatchingPass();
+	LightModelPass();
+	//HatchingPass();
 
-	//if (showNormals)
-	//{
-	//	RenderNormals();
-	//}
+	if (showNormals)
+	{
+		RenderNormals();
+	}
+
 	RenderGlobalLight();
 	/*
 	RenderSelectedVolumen();*/
@@ -459,30 +461,20 @@ void GraphicsSystem::RenderTerrain()
 void GraphicsSystem::RenderNormals()
 {
 	glm::mat4 view = camera->GetView();
-	linesShader.start();
-	linesShader.setUniform("ProjectionMatrix", projection);
-	linesShader.setUniform("ViewMatrix", view);
-	vector<Entity*>::iterator it2 = EntityManager::GetInstance()->GetEntities().begin();
-	vector<Entity*>::iterator end2 = EntityManager::GetInstance()->GetEntities().end();
-	for (; it2 != end2; ++it2)
+	NormalRenderShader.start();
+	NormalRenderShader.setUniform("ProjectionMatrix", projection);
+	NormalRenderShader.setUniform("ViewMatrix", view);
+	vector<Entity*>::iterator it = EntityManager::GetInstance()->GetEntities().begin();
+	vector<Entity*>::iterator end = EntityManager::GetInstance()->GetEntities().end();
+	for (; it != end; ++it)
 	{
-
-		GraphicsComponent* graphicsComponent = dynamic_cast<GraphicsComponent*>((*it2)->GetComponent("GraphicsComponent"));
+		GraphicsComponent* graphicsComponent = dynamic_cast<GraphicsComponent*>((*it)->GetComponent("GraphicsComponent"));
 		if (graphicsComponent)
 		{
-
-			TexturedModel* model = graphicsComponent->GetTexturedModel();
-			glm::mat4 modelMatrix = graphicsComponent->GetModelMatrix();
-			linesShader.setUniform("ModelMatrix", modelMatrix);
-			model->DrawNormals();
-
-
-			model->UnBind();
+			graphicsComponent->Draw(NormalRenderShader);
 		}
-
-
 	}
-	linesShader.stop();
+	NormalRenderShader.stop();
 }
 
 void GraphicsSystem::ShadowPass()

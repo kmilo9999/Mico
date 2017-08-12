@@ -56,7 +56,7 @@ void main(){
    // correspond to pixel on the screen
    vec2 texCoordXY = gl_FragCoord.xy/sizeOfTex.x;
    // sample depth of the texture by light intensity
-   float texCoordZ = lightIntensity * sizeOfTex.z;
+   float texCoordZ = lightIntensity ;
 
    // sample 3D texture to get hatching intensity
    vec3 hatching = texture(textureArray, vec3(texCoordXY,texCoordZ )).rgb;

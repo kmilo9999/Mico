@@ -40,7 +40,7 @@ void RawModel::setVertexCount(int vertexcount)
 	this->vertexCount = vertexCount;
 }
 
-int RawModel::getNormalsVAO()
+int RawModel::getNormalsVBO()
 {
 	return normals_vbo;
 }

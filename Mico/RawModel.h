@@ -15,7 +15,7 @@ public:
 	int getVertexCount() const;
 	void setVertexCount(int vertexcount);
 
-	int getNormalsVAO();
+	int getNormalsVBO();
 	void setNormalsVBO(int normals_vbo);
 
 	int getNormalsCount();

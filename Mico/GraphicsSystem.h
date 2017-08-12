@@ -50,7 +50,7 @@ private:
 	ShaderProgram lightModelShader;
 	ShaderProgram simpleShader;
 	ShaderProgram terrainShader;
-	ShaderProgram linesShader;
+	ShaderProgram NormalRenderShader;
 	ShaderProgram shadowShader;
 	ShaderProgram renderToQuadShader;
 	ShaderProgram hatching;

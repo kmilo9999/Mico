@@ -12,7 +12,7 @@ class ShaderProgram
 {
 public:
 	ShaderProgram();
-	void LoadShaders(const char* vertex_filenname, const char* fragment_filename);
+	void LoadShaders(const char* vertex_filenname, const char* fragment_filename, const char* geometry_file = NULL);
 	~ShaderProgram();
 	void start();
 	void stop();

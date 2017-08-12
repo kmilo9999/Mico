@@ -84,7 +84,7 @@ GLuint Loader::ConstructNormalsVectorsVBO(vector<vec3>& vertices, vector<int>& i
 			, (vertex3.z + vertex3.z + vertex3.z) / 3);
 		
 		myNormals.push_back(centroid);
-		myNormals.push_back(centroid + normal * 6.0f);
+		myNormals.push_back(centroid + normal * 10.0f);
 	}
 
 	glGenVertexArrays(1, &normal_vao);
