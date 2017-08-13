@@ -107,6 +107,71 @@ GLuint Loader::ConstructNormalsVectorsVBO(vector<vec3>& vertices, vector<int>& i
 	return normal_vao;
 }
 
+void Loader::FindAdjacencies(const aiMesh * paiMesh, vector<int>& indices)
+{
+	// Step 1 - find the two triangles that share every edge
+	for (uint i = 0; i < paiMesh->mNumFaces; i++) 
+	{
+		const aiFace& face = paiMesh->mFaces[i];
+
+		Face Unique;
+
+		// If a position vector is duplicated in the VB we fetch the 
+		// index of the first occurrence.
+		for (uint j = 0; j < 3; j++)
+		{
+			uint Index = face.mIndices[j];
+			aiVector3D& v = paiMesh->mVertices[Index];
+
+			if (m_posMap.find(v) == m_posMap.end()) 
+			{
+				m_posMap[v] = Index;
+			}
+			else 
+			{
+				Index = m_posMap[v];
+			}
+
+			Unique.Indices[j] = Index;
+		}
+
+		m_uniqueFaces.push_back(Unique);
+
+		Edge e1(Unique.Indices[0], Unique.Indices[1]);
+		Edge e2(Unique.Indices[1], Unique.Indices[2]);
+		Edge e3(Unique.Indices[2], Unique.Indices[0]);
+
+		m_indexMap[e1].AddNeigbor(i);
+		m_indexMap[e2].AddNeigbor(i);
+		m_indexMap[e3].AddNeigbor(i);
+
+	}
+
+	// Step 2 - build the index buffer with the adjacency info
+	for (uint i = 0; i < paiMesh->mNumFaces; i++) 
+	{
+		const Face& face = m_uniqueFaces[i];
+
+		for (uint j = 0; j < 3; j++) 
+		{
+			Edge e(face.Indices[j], face.Indices[(j + 1) % 3]);
+			assert(m_indexMap.find(e) != m_indexMap.end());
+			Neighbors n = m_indexMap[e];
+			uint OtherTri = n.GetOther(i);
+
+			bool comp = OtherTri != -1;
+			assert(comp);
+
+			const Face& OtherFace = m_uniqueFaces[OtherTri];
+			uint OppositeIndex = OtherFace.GetOppositeIndex(e);
+
+			indices.push_back(face.Indices[j]);
+			indices.push_back(OppositeIndex);
+		}
+	}
+
+}
+
 const string & Loader::modelFilePath()
 {
 	return myModelFilePath;
@@ -235,14 +300,17 @@ void Loader::ProcessMesh(aiMesh* mesh, const aiScene* scene, vector<TexturedMode
 
 		uv.push_back(vec);
 	}
+
+	FindAdjacencies(mesh, indices);
+
 	// Now wak through each of the mesh's faces (a face is a mesh its triangle) and retrieve the corresponding vertex indices.
-	for (GLuint i = 0; i < mesh->mNumFaces; i++)
-	{
-		aiFace face = mesh->mFaces[i];
-		// Retrieve all indices of the face and store them in the indices vector
-		for (GLuint j = 0; j < face.mNumIndices; j++)
-			indices.push_back(face.mIndices[j]);
-	}
+	//for (GLuint i = 0; i < mesh->mNumFaces; i++)
+	//{
+	//	aiFace face = mesh->mFaces[i];
+	//	// Retrieve all indices of the face and store them in the indices vector
+	//	for (GLuint j = 0; j < face.mNumIndices; j++)
+	//		indices.push_back(face.mIndices[j]);
+	//}
 	// Process materials
 
 	vec4 diffuseColor;
@@ -310,11 +378,11 @@ void Loader::ProcessMesh(aiMesh* mesh, const aiScene* scene, vector<TexturedMode
 
 		}
 	}
-
+	
 	RawModel* rawModel = LoadToVAO(vertices, uv, normals, indices);
 	int normalsVectorSize = 0;
-	int normalsVBO = ConstructNormalsVectorsVBO(vertices, indices,normalsVectorSize);
-	rawModel->setNormalsVBO(normalsVBO);
+	//int normalsVBO = ConstructNormalsVectorsVBO(vertices, indices,normalsVectorSize);
+	//rawModel->setNormalsVBO(normalsVBO);
 	rawModel->setNormalsCount(normalsVectorSize);
 	
 	TexturedModel* model = new TexturedModel(rawModel);

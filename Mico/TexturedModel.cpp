@@ -56,7 +56,8 @@ void TexturedModel::BindTexture(int textureUnit, int textureId)
 void TexturedModel::Draw()
 {
 	glBindVertexArray(myModel->getVao());
-	glDrawElements(GL_TRIANGLES, myModel->getVertexCount(), GL_UNSIGNED_INT, 0);
+	//glDrawElements(GL_TRIANGLES, myModel->getVertexCount(), GL_UNSIGNED_INT, 0);
+	glDrawElements(GL_TRIANGLES_ADJACENCY, myModel->getVertexCount(), GL_UNSIGNED_INT, 0);
 	glBindVertexArray(0);
 }
 

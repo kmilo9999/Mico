@@ -155,8 +155,8 @@ void EntityManager::Initialize()
 	
 	//Initialize center model
 	//InitializeModels();
-	CreateEntity("bunny", vec3(0.0f, 11.0f, 3.0f), quat(), vec3(1.0f, 1.0f, 1.0f));
-	myCenterModelId = "bunny";
+	CreateEntity("teapot", vec3(0.0f, 11.0f, 3.0f), quat(), vec3(1.0f, 1.0f, 1.0f));
+	myCenterModelId = "teapot";
 
 
 

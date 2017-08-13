@@ -226,6 +226,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Hatching.fragmentshader" />
+    <None Include="Hatching.geometryshader" />
     <None Include="Hatching.vertexshader" />
     <None Include="LightModel.fragmentshader" />
     <None Include="LightModel.vertexshader" />

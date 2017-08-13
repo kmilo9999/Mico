@@ -58,8 +58,8 @@ void GraphicsSystem::Init()
 	lightModelShader.LoadShaders("LightModel.vertexshader", "LightModel.fragmentshader");
 	simpleShader.LoadShaders("Simple.vertexshader", "Simple.fragmentshader");
 	terrainShader.LoadShaders("Terrain.vertexshader", "Terrain.fragmentshader");
-	//NormalRenderShader.LoadShaders("NormalLines.vertexshader", "NormalLines.fragmentshader");
-	NormalRenderShader.LoadShaders("NormalLines.vertexshader", "NormalLines.fragmentshader", "NormalLines.geometryshader");
+	NormalRenderShader.LoadShaders("NormalLines.vertexshader", "NormalLines.fragmentshader");
+	//NormalRenderShader.LoadShaders("NormalLines.vertexshader", "NormalLines.fragmentshader", "NormalLines.geometryshader");
 	shadowShader.LoadShaders("Shadows.vertexshader", "Shadows.fragmentshader");
 	hatching.LoadShaders("Hatching.vertexshader", "Hatching.fragmentshader");
 
