@@ -58,10 +58,11 @@ void GraphicsSystem::Init()
 	lightModelShader.LoadShaders("LightModel.vertexshader", "LightModel.fragmentshader");
 	simpleShader.LoadShaders("Simple.vertexshader", "Simple.fragmentshader");
 	terrainShader.LoadShaders("Terrain.vertexshader", "Terrain.fragmentshader");
-	NormalRenderShader.LoadShaders("NormalLines.vertexshader", "NormalLines.fragmentshader");
-	//NormalRenderShader.LoadShaders("NormalLines.vertexshader", "NormalLines.fragmentshader", "NormalLines.geometryshader");
+	//NormalRenderShader.LoadShaders("NormalLines.vertexshader", "NormalLines.fragmentshader");
+	normalRenderShader.LoadShaders("NormalLines.vertexshader", "NormalLines.fragmentshader", "NormalLines.geometryshader");
 	shadowShader.LoadShaders("Shadows.vertexshader", "Shadows.fragmentshader");
-	hatching.LoadShaders("Hatching.vertexshader", "Hatching.fragmentshader");
+	hatchingShader.LoadShaders("Hatching.vertexshader", "Hatching.fragmentshader");
+	newLightModelShader.LoadShaders("NewLightModel.vertexshader", "NewLightModel.fragmentshader", "NewLightModel.geometryshader");
 
 	lightModelShader.addUniform("ProjectionMatrix");
 	lightModelShader.addUniform("ViewMatrix");
@@ -91,9 +92,9 @@ void GraphicsSystem::Init()
 	terrainShader.addUniform("shadowMap");
 	terrainShader.addUniform("ShadowMatrix");
 
-	NormalRenderShader.addUniform("ProjectionMatrix");
-	NormalRenderShader.addUniform("ViewMatrix");
-	NormalRenderShader.addUniform("ModelMatrix");
+	normalRenderShader.addUniform("ProjectionMatrix");
+	normalRenderShader.addUniform("ViewMatrix");
+	normalRenderShader.addUniform("ModelMatrix");
 
 	Fbo* shadowframeBuffer = new Fbo();
 	shadowframeBuffer->CreateFBO(1024, 1024);
@@ -108,14 +109,30 @@ void GraphicsSystem::Init()
 	renderToQuadShader.addUniform("screenTexture");
 
 
-	hatching.addUniform("ProjectionMatrix");
-	hatching.addUniform("ViewMatrix");
-	hatching.addUniform("ModelMatrix");
-	hatching.addUniform("light.position");
-	hatching.addUniform("light.ambient");
-	hatching.addUniform("light.diffuse");
-	hatching.addUniform("light.specular");
-	hatching.addUniform("ViewPos");
+	hatchingShader.addUniform("ProjectionMatrix");
+	hatchingShader.addUniform("ViewMatrix");
+	hatchingShader.addUniform("ModelMatrix");
+	hatchingShader.addUniform("light.position");
+	hatchingShader.addUniform("light.ambient");
+	hatchingShader.addUniform("light.diffuse");
+	hatchingShader.addUniform("light.specular");
+	hatchingShader.addUniform("ViewPos");
+
+
+	newLightModelShader.addUniform("ProjectionMatrix");
+	newLightModelShader.addUniform("ViewMatrix");
+	newLightModelShader.addUniform("ModelMatrix");
+	newLightModelShader.addUniform("light.position");
+	newLightModelShader.addUniform("light.ambient");
+	newLightModelShader.addUniform("light.diffuse");
+	newLightModelShader.addUniform("light.specular");
+	newLightModelShader.addUniform("material.ambient");
+	newLightModelShader.addUniform("material.diffuse");
+	newLightModelShader.addUniform("material.specular");
+	newLightModelShader.addUniform("material.shininess");
+	newLightModelShader.addUniform("ViewPos");
+	newLightModelShader.addUniform("hasTexture");
+	newLightModelShader.addUniform("isGround");
 
 	// Load 3D texture
 	vector<string> texturesVector;
@@ -159,7 +176,11 @@ void GraphicsSystem::Update()
 	camera->Update();
 	projection = glm::perspective(camera->foV, windowSize.x / windowSize.y, 0.1f, 1000.0f);
 	light->Update();
-	terrain->Update();
+	if (terrain)
+	{
+		terrain->Update();
+	}
+	
 
 	//ShadowPass();
 
@@ -168,8 +189,10 @@ void GraphicsSystem::Update()
 	InitRender();
 	//RenderTextureToQuad(*shadowObjet.shadowFbo());
 
-	LightModelPass();
+	RenderTerrain();
+	//LightModelPass();
 	//HatchingPass();
+	NewLightModelPass();
 
 	if (showNormals)
 	{
@@ -284,7 +307,7 @@ void GraphicsSystem::onNotify(Event & evt)
 void GraphicsSystem::InitRender()
 {
 
-	glEnable(GL_CULL_FACE);
+	//glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
 	//glCullFace(GL_BACK);
 	glViewport(0, 0, windowSize.x, windowSize.y);
@@ -310,11 +333,11 @@ void GraphicsSystem::InitScene()
 	Texture* targetTtexture = new Texture(GL_TEXTURE_2D, "../Resources/Textures/texture_sample.jpg");
 	Material* material = new Material(vec3(1.0f, 0.5f, 0.31f), vec3(1.0f, 0.5f, 0.31f), vec3(0.2f, 0.2f, 0.2f), 64.0f);
 	material->AddTexture(targetTtexture);
-	GraphicsComponent* graphics = new GraphicsComponent(EntityManager::GetInstance()->GetModel("cube"), material);
+	GraphicsComponent* graphics = new GraphicsComponent(EntityManager::GetInstance()->GetModelByName("cube"), material);
 	light->AddComponent(graphics);
 
 	SelectableBoundingVolumen* boundingVolumen = new BoundingSphere(0.7f);
-	boundingVolumen->SetModel(EntityManager::GetInstance()->GetModel("sphere"));
+	boundingVolumen->SetModel(EntityManager::GetInstance()->GetModelByName("cube"));
 	light->AddComponent(boundingVolumen);
 
 	light->SetIntensity(0.5f);
@@ -416,54 +439,58 @@ void GraphicsSystem::RenderGlobalLight()
 
 void GraphicsSystem::RenderTerrain()
 {
-	TransformationComponent* lightTransform = dynamic_cast<TransformationComponent*>(light->GetComponent("TransformationComponent"));
-
-	if (lightTransform)
+	if (terrain)
 	{
-		lightModelShader.start();
-		lightModelShader.setUniform("ProjectionMatrix", projection);
-		lightModelShader.setUniform("ViewMatrix", camera->GetView());
-		lightModelShader.setUniform("light.position", lightTransform->GetPosition());
-		lightModelShader.setUniform("light.ambient", light->GetAmbient());
-		lightModelShader.setUniform("light.diffuse", light->GetDiffuse());
-		lightModelShader.setUniform("light.specular", light->GetSpecular());
-		lightModelShader.setUniform("ViewPos", camera->position);
-		lightModelShader.setUniformi("isGround", 1);
-		lightModelShader.setUniformi("hasTexture", 1);
-		// add shadows
-		Entity* terrainEntity = dynamic_cast<Entity*>(terrain);
-		GraphicsComponent* graphicsComponent = dynamic_cast<GraphicsComponent*>(terrainEntity->GetComponent("GraphicsComponent"));
-		//add shadow
-		mat4x4 trans = translate(mat4(), vec3(0.5f, 0.5f, 0.5f));
-		mat4x4 sca = scale(mat4(), vec3(0.5f, 0.5f, 0.5f));
-		mat4x4 B = trans*sca;
+		TransformationComponent* lightTransform = dynamic_cast<TransformationComponent*>(light->GetComponent("TransformationComponent"));
 
-		mat4& viewMatrixLightPOV = glm::lookAt(lightTransform->GetPosition(), vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
-		mat4x4 shadowMatrix = B*shadowObjet.shadowProjectionMatrix() * viewMatrixLightPOV;
+		if (lightTransform)
+		{
+			lightModelShader.start();
+			lightModelShader.setUniform("ProjectionMatrix", projection);
+			lightModelShader.setUniform("ViewMatrix", camera->GetView());
+			lightModelShader.setUniform("light.position", lightTransform->GetPosition());
+			lightModelShader.setUniform("light.ambient", light->GetAmbient());
+			lightModelShader.setUniform("light.diffuse", light->GetDiffuse());
+			lightModelShader.setUniform("light.specular", light->GetSpecular());
+			lightModelShader.setUniform("ViewPos", camera->position);
+			lightModelShader.setUniformi("isGround", 1);
+			lightModelShader.setUniformi("hasTexture", 1);
+			// add shadows
+			Entity* terrainEntity = dynamic_cast<Entity*>(terrain);
+			GraphicsComponent* terrainGraphicsComponent = dynamic_cast<GraphicsComponent*>(terrainEntity->GetComponent("GraphicsComponent"));
+			//add shadow
+			mat4x4 trans = translate(mat4(), vec3(0.5f, 0.5f, 0.5f));
+			mat4x4 sca = scale(mat4(), vec3(0.5f, 0.5f, 0.5f));
+			mat4x4 B = trans*sca;
 
-		lightModelShader.setUniform("ShadowMatrix", shadowMatrix);
-		lightModelShader.setUniformi("shadowMap", 1);
-		graphicsComponent->setShadowsFbo(shadowObjet.shadowFbo());
+			mat4& viewMatrixLightPOV = glm::lookAt(lightTransform->GetPosition(), vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
+			mat4x4 shadowMatrix = B*shadowObjet.shadowProjectionMatrix() * viewMatrixLightPOV;
 
-		Material* material = graphicsComponent->GetMaterial();
+			lightModelShader.setUniform("ShadowMatrix", shadowMatrix);
+			lightModelShader.setUniformi("shadowMap", 1);
+			terrainGraphicsComponent->setShadowsFbo(shadowObjet.shadowFbo());
 
-		lightModelShader.setUniform("material.ambient", ambientColor);
-		lightModelShader.setUniform("material.diffuse", material->GetDiffuse());
-		lightModelShader.setUniform("material.specular", material->GetSpecular());
-		lightModelShader.setUniformf("material.shininess", material->GetShinines());
+			Material* material = terrainGraphicsComponent->GetMaterial();
 
-		graphicsComponent->bindModelTextures();
-		graphicsComponent->Draw(lightModelShader);
-		lightModelShader.stop();
+			lightModelShader.setUniform("material.ambient", ambientColor);
+			lightModelShader.setUniform("material.diffuse", material->GetDiffuse());
+			lightModelShader.setUniform("material.specular", material->GetSpecular());
+			lightModelShader.setUniformf("material.shininess", material->GetShinines());
+
+			terrainGraphicsComponent->bindModelTextures();
+			terrainGraphicsComponent->Draw(lightModelShader);
+			lightModelShader.stop();
+		}
 	}
+	
 }
 
 void GraphicsSystem::RenderNormals()
 {
 	glm::mat4 view = camera->GetView();
-	NormalRenderShader.start();
-	NormalRenderShader.setUniform("ProjectionMatrix", projection);
-	NormalRenderShader.setUniform("ViewMatrix", view);
+	normalRenderShader.start();
+	normalRenderShader.setUniform("ProjectionMatrix", projection);
+	normalRenderShader.setUniform("ViewMatrix", view);
 	vector<Entity*>::iterator it = EntityManager::GetInstance()->GetEntities().begin();
 	vector<Entity*>::iterator end = EntityManager::GetInstance()->GetEntities().end();
 	for (; it != end; ++it)
@@ -471,10 +498,10 @@ void GraphicsSystem::RenderNormals()
 		GraphicsComponent* graphicsComponent = dynamic_cast<GraphicsComponent*>((*it)->GetComponent("GraphicsComponent"));
 		if (graphicsComponent)
 		{
-			graphicsComponent->Draw(NormalRenderShader);
+			graphicsComponent->Draw(normalRenderShader);
 		}
 	}
-	NormalRenderShader.stop();
+	normalRenderShader.stop();
 }
 
 void GraphicsSystem::ShadowPass()
@@ -503,9 +530,12 @@ void GraphicsSystem::ShadowPass()
 	shadowObjet.setShadowProjectionMatrix(lightProjection);
 
 	//Render Terrain
-	Entity* terrainEntity = dynamic_cast<Entity*>(terrain);
-	GraphicsComponent* terrainGraphicsComponent = dynamic_cast<GraphicsComponent*>(terrainEntity->GetComponent("GraphicsComponent"));
-	terrainGraphicsComponent->Draw(shadowShader);
+	if (terrain)
+	{
+		Entity* terrainEntity = dynamic_cast<Entity*>(terrain);
+		GraphicsComponent* terrainGraphicsComponent = dynamic_cast<GraphicsComponent*>(terrainEntity->GetComponent("GraphicsComponent"));
+		terrainGraphicsComponent->Draw(shadowShader);
+	}
 
 	//Render models
 	vector<Entity*>::iterator it = EntityManager::GetInstance()->GetEntities().begin();
@@ -527,7 +557,6 @@ void GraphicsSystem::ShadowPass()
 
 void GraphicsSystem::LightModelPass()
 {
-	RenderTerrain();
 	RenderEntities();
 }
 
@@ -538,32 +567,34 @@ void GraphicsSystem::HatchingPass()
 
 	if (lightTransform)
 	{
-		hatching.start();
-		hatching.setUniform("ProjectionMatrix", projection);
-		hatching.setUniform("ViewMatrix", camera->GetView());
-		hatching.setUniform("light.position", lightTransform->GetPosition());
-		hatching.setUniform("light.ambient", light->GetAmbient());
-		hatching.setUniform("light.diffuse", light->GetDiffuse());
-		hatching.setUniform("light.specular", light->GetSpecular());
-		hatching.setUniform("ViewPos", camera->position);
+		hatchingShader.start();
+		hatchingShader.setUniform("ProjectionMatrix", projection);
+		hatchingShader.setUniform("ViewMatrix", camera->GetView());
+		hatchingShader.setUniform("light.position", lightTransform->GetPosition());
+		hatchingShader.setUniform("light.ambient", light->GetAmbient());
+		hatchingShader.setUniform("light.diffuse", light->GetDiffuse());
+		hatchingShader.setUniform("light.specular", light->GetSpecular());
+		hatchingShader.setUniform("ViewPos", camera->position);
 
-		Entity* terrainEntity = dynamic_cast<Entity*>(terrain);
-		GraphicsComponent* terrainGraphicsComponent = dynamic_cast<GraphicsComponent*>(terrainEntity->GetComponent("GraphicsComponent"));
-		
+		if (terrain)
+		{
+			Entity* terrainEntity = dynamic_cast<Entity*>(terrain);
+			GraphicsComponent* terrainGraphicsComponent = dynamic_cast<GraphicsComponent*>(terrainEntity->GetComponent("GraphicsComponent"));
 
-		
-	    //! Fetch the 3D Texture
-        hatchingTexture->Bind(0);
-		hatching.setUniformi("textureArray", 0);
+			//! Fetch the 3D Texture
+			hatchingTexture->Bind(0);
+			hatchingShader.setUniformi("textureArray", 0);
 
 
-		Material* material = terrainGraphicsComponent->GetMaterial();
-		hatching.setUniform("material.ambient", ambientColor);
-		hatching.setUniform("material.diffuse", material->GetDiffuse());
-		hatching.setUniform("material.specular", material->GetSpecular());
-		hatching.setUniformf("material.shininess", material->GetShinines());
+			Material* material = terrainGraphicsComponent->GetMaterial();
+			hatchingShader.setUniform("material.ambient", ambientColor);
+			hatchingShader.setUniform("material.diffuse", material->GetDiffuse());
+			hatchingShader.setUniform("material.specular", material->GetSpecular());
+			hatchingShader.setUniformf("material.shininess", material->GetShinines());
 
-		terrainGraphicsComponent->Draw(hatching);
+			terrainGraphicsComponent->Draw(hatchingShader);
+		}
+	
 
 		vector<Entity*>::iterator it = EntityManager::GetInstance()->GetEntities().begin();
 		vector<Entity*>::iterator end = EntityManager::GetInstance()->GetEntities().end();
@@ -572,19 +603,20 @@ void GraphicsSystem::HatchingPass()
 			GraphicsComponent* entityGraphicsComponent = dynamic_cast<GraphicsComponent*>((*it)->GetComponent("GraphicsComponent"));
 			if (entityGraphicsComponent)
 			{
-				hatching.setUniform("material.ambient", ambientColor);
-				hatching.setUniform("material.diffuse", material->GetDiffuse());
-				hatching.setUniform("material.specular", material->GetSpecular());
-				hatching.setUniformf("material.shininess", material->GetShinines());
+				Material* material = entityGraphicsComponent->GetMaterial();
+				hatchingShader.setUniform("material.ambient", ambientColor);
+				hatchingShader.setUniform("material.diffuse", material->GetDiffuse());
+				hatchingShader.setUniform("material.specular", material->GetSpecular());
+				hatchingShader.setUniformf("material.shininess", material->GetShinines());
 
 				//! Fetch the 3D Texture
 				hatchingTexture->Bind(0);
-				hatching.setUniformi("textureArray", 0);
-				entityGraphicsComponent->Draw(hatching);
+				hatchingShader.setUniformi("textureArray", 0);
+				entityGraphicsComponent->Draw(hatchingShader);
 			}
 		}
 
-		hatching.stop();
+		hatchingShader.stop();
 	}
 
 }
@@ -648,6 +680,56 @@ void GraphicsSystem::RenderTextureToQuad(Fbo& frameBuffer)
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 	renderToQuadShader.stop();
 
+}
+
+void GraphicsSystem::NewLightModelPass()
+{
+	TransformationComponent* lightTransform = dynamic_cast<TransformationComponent*>(light->GetComponent("TransformationComponent"));
+	if (lightTransform)
+	{
+
+		newLightModelShader.start();
+		newLightModelShader.setUniform("ProjectionMatrix", projection);
+		newLightModelShader.setUniform("ViewMatrix", camera->GetView());
+		newLightModelShader.setUniform("light.position", lightTransform->GetPosition());
+		newLightModelShader.setUniform("light.ambient", light->GetAmbient());
+		newLightModelShader.setUniform("light.diffuse", light->GetDiffuse());
+		newLightModelShader.setUniform("light.specular", light->GetSpecular());
+		newLightModelShader.setUniform("ViewPos", camera->position);
+		newLightModelShader.setUniformi("isGround", 0);
+
+		//Render models
+		vector<Entity*>::iterator it = EntityManager::GetInstance()->GetEntities().begin();
+		vector<Entity*>::iterator end = EntityManager::GetInstance()->GetEntities().end();
+		for (; it != end; ++it)
+		{
+
+			GraphicsComponent* graphicsComponent = dynamic_cast<GraphicsComponent*>((*it)->GetComponent("GraphicsComponent"));
+			if (graphicsComponent)
+			{
+				Material* material = graphicsComponent->GetMaterial();
+
+				if (material->GetTextures().size() > 0)
+				{
+					newLightModelShader.setUniformi("hasTexture", 1);
+				}
+				else
+				{
+					newLightModelShader.setUniformi("hasTexture", 0);
+				}
+
+				newLightModelShader.setUniform("material.ambient", ambientColor);
+				newLightModelShader.setUniform("material.diffuse", material->GetDiffuse());
+				newLightModelShader.setUniform("material.specular", material->GetSpecular());
+				newLightModelShader.setUniformf("material.shininess", material->GetShinines());
+				graphicsComponent->bindModelTextures();
+				graphicsComponent->Draw(newLightModelShader);
+			}
+
+
+		}
+		newLightModelShader.stop();
+	}
 }
 
 void GraphicsSystem::SetGlobalLight(GlobalLight* light)

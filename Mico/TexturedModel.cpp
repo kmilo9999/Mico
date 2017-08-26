@@ -1,13 +1,14 @@
 #include "TexturedModel.h"
 
 
-TexturedModel::TexturedModel(RawModel * model): myModel(model)
+TexturedModel::TexturedModel(GLenum mode,RawModel * model): myModel(model), myDrawMode(mode)
 {
 
 }
 
 TexturedModel::TexturedModel(const TexturedModel & other)
-	: myModel(new RawModel(other.GetModel()->getVao(), other.GetModel()->getVertexCount()))
+	: myModel(new RawModel(other.GetModel()->getVao(), other.GetModel()->getIndexCount()))
+	, myDrawMode(other.myDrawMode)
 {
 	
 }
@@ -15,7 +16,8 @@ TexturedModel::TexturedModel(const TexturedModel & other)
 TexturedModel & TexturedModel::operator=(const TexturedModel & other)
 {
 	// TODO: insert return statement here
-    myModel = new RawModel(other.GetModel()->getVao(), other.GetModel()->getVertexCount());
+    myModel = new RawModel(other.GetModel()->getVao(), other.GetModel()->getIndexCount());
+	myDrawMode = other.myDrawMode;
 	return *this;
 }
 
@@ -56,8 +58,7 @@ void TexturedModel::BindTexture(int textureUnit, int textureId)
 void TexturedModel::Draw()
 {
 	glBindVertexArray(myModel->getVao());
-	//glDrawElements(GL_TRIANGLES, myModel->getVertexCount(), GL_UNSIGNED_INT, 0);
-	glDrawElements(GL_TRIANGLES_ADJACENCY, myModel->getVertexCount(), GL_UNSIGNED_INT, 0);
+	glDrawElements(myDrawMode, myModel->getIndexCount(), GL_UNSIGNED_INT, 0);
 	glBindVertexArray(0);
 }
 
@@ -87,6 +88,16 @@ void TexturedModel::SetId(string id)
 string TexturedModel::GetId()
 {
 	return id;
+}
+
+void TexturedModel::SetDrawMode(GLenum mode)
+{
+	myDrawMode = mode;
+}
+
+GLenum TexturedModel::GetDrawModel()
+{
+	return myDrawMode;
 }
 
 

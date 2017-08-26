@@ -43,10 +43,8 @@ void main(){
   vec3 halfwayDir = normalize(lightDir + viewDir );
   float spec = pow(max(dot(normal, halfwayDir), 0.0), material.shininess);
   
- 
 
   float lightIntensity = clamp(0.025 + diff + spec ,0,1);
-
 
    // get size of 3D texture
    vec3 sizeOfTex = textureSize(textureArray, 0);
@@ -63,48 +61,6 @@ void main(){
 
    //modulate hatching with lighting (not required)
 	color.rgb = hatching * (1.0 + lightIntensity * 2)/3;
-   //color.rgb = vec3(sizeOfTex.z/1,0,0);
-   //color.rgb = hatching;
    color.a = 1;
-
-   /*color = vec4(1.0, 1.0, 1.0, 1.0);
-
-	if (lightIntensity < 0.85) 
-	{
-	   // hatch from left top corner to right bottom
-	   if (mod(gl_FragCoord.x + gl_FragCoord.y, 10.0) == 0.0) 
-	   {
-		  color = vec4(0.0, 0.0, 0.0, 1.0);
-	   }
-	}
-
-	if (lightIntensity < 0.75) 
-	{
-	   // hatch from right top corner to left boottom
-	   if (mod(gl_FragCoord.x - gl_FragCoord.y, 10.0) == 0.0) 
-	   {
-		  color = vec4(0.0, 0.0, 0.0, 1.0);
-	   }
-	}
-
-	if (lightIntensity < 0.5) 
-	{
-	   // hatch from left top to right bottom
-	   if (mod(gl_FragCoord.x + gl_FragCoord.y - 5.0, 10.0) == 0.0) 
-	   {
-		  color = vec4(0.0, 0.0, 0.0, 1.0);
-	   }
-	}
-
-	if (lightIntensity < 0.25) 
-	{
-	   // hatch from right top corner to left bottom
-	   if (mod(gl_FragCoord.x - gl_FragCoord.y - 5.0, 10.0) == 0.0) 
-	   {
-		  color = vec4(0.0, 0.0, 0.0, 1.0);
-	   }
-	}*/
-
-   
  
 }

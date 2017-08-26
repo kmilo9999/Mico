@@ -30,13 +30,15 @@ public:
 	void UpdateEntities();
 
 
-	TexturedModel* GetModel(string model);
+	TexturedModel* GetModelByName(string model);
+	TexturedModel* GetModelByNameAndMode(string model, GLenum mode );
+	TexturedModel* GetModel(string model, GLenum mode);
 	
 	void InsertModelEntities(TexturedModel* model );
 
 	void InserModelEntity( Entity* entity);
 	void RemoveEntity( unsigned int entityId);
-	void CreateEntity(string modelId, vec3 postion = vec3(), quat orientation = quat(), vec3 scale = vec3());
+	void CreateEntity(string modelId, vec3 postion = vec3(), quat orientation = quat(), vec3 scale = vec3(), GLenum mode = GL_TRIANGLES);
 
 	virtual void onNotify(Event& event);
 
@@ -46,7 +48,6 @@ private:
 
 	void ReplaceCenterModel(string modelId);
 
-	void InitializeModels();
 	EntityManager();
 	EntityMap myEntities;
 	ModelMap myModels;

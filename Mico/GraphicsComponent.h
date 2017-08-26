@@ -8,6 +8,7 @@
 
 class GraphicsComponent : public Component
 {
+	
 public:
 	GraphicsComponent(TexturedModel* model, Material* material);
 	~GraphicsComponent();

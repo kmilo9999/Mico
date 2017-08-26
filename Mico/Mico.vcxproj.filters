@@ -289,5 +289,20 @@
     <None Include="NormalLines.geometryshader">
       <Filter>shaders</Filter>
     </None>
+    <None Include="Hatching.geometryshader">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="LightModel.geometryshader">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="NewLightModel.fragmentshader">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="NewLightModel.geometryshader">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="NewLightModel.vertexshader">
+      <Filter>shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

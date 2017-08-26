@@ -2,7 +2,7 @@
 
 
 
-RawModel::RawModel(int vao, int vertexCount):vao(vao),vertexCount(vertexCount)
+RawModel::RawModel(int vao, int indexCount):vao(vao),myIndexCount(indexCount)
 {
 }
 
@@ -25,19 +25,19 @@ void RawModel::setVao(int vao)
 	this->vao = vao;
 }
 
-int RawModel::getVertexCount()
+int RawModel::getIndexCount()
 {
-	return vertexCount;
+	return myIndexCount;
 }
 
-int RawModel::getVertexCount() const
+int RawModel::getIndexCount() const
 {
-	return vertexCount;
+	return myIndexCount;
 }
 
 void RawModel::setVertexCount(int vertexcount)
 {
-	this->vertexCount = vertexCount;
+	this->myIndexCount = myIndexCount;
 }
 
 int RawModel::getNormalsVBO()

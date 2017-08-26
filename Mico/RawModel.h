@@ -11,8 +11,8 @@ public:
 
 	void setVao(int vao);
 
-	int getVertexCount();
-	int getVertexCount() const;
+	int getIndexCount();
+	int getIndexCount() const;
 	void setVertexCount(int vertexcount);
 
 	int getNormalsVBO();
@@ -24,7 +24,7 @@ public:
 protected:
 	int vao;
 	int normals_vbo;
-	int vertexCount;
+	int myIndexCount;
 	int normalsCount;
 	
 

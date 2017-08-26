@@ -33,7 +33,11 @@ public:
 	void ShadowPass();
 	void LightModelPass();
 	void HatchingPass();
-	
+
+	// this mode use geometry shaders to pass from triangle adjanceny to triangles
+	// and compute bing phong light calculation
+	void NewLightModelPass();
+
 	void SetGlobalLight(GlobalLight* light);
 
 	
@@ -50,10 +54,11 @@ private:
 	ShaderProgram lightModelShader;
 	ShaderProgram simpleShader;
 	ShaderProgram terrainShader;
-	ShaderProgram NormalRenderShader;
+	ShaderProgram normalRenderShader;
 	ShaderProgram shadowShader;
 	ShaderProgram renderToQuadShader;
-	ShaderProgram hatching;
+	ShaderProgram hatchingShader;
+	ShaderProgram newLightModelShader;
 	
 	ShadowObject shadowObjet;
 

@@ -54,7 +54,7 @@ void EntityManager::UpdateEntities()
 	}
 }
 
-TexturedModel * EntityManager::GetModel(string modelId)
+TexturedModel * EntityManager::GetModelByName(string modelId)
 {
 	ModelMap::iterator it = myModels.find(modelId);
 	if (it != myModels.end())
@@ -63,22 +63,40 @@ TexturedModel * EntityManager::GetModel(string modelId)
 	}
 	else
 	{
-		//load the model
-		string filePath = Loader::GetInstance()->modelFilePath();
-		string modelFilePath = filePath.append(modelId).append(".obj");
-		TexturedModel* model = 
-			Loader::GetInstance()->LoadToFromFile(modelFilePath.c_str());
-		if (model != nullptr)
-		{
-			model->SetId(modelId);
-			InsertModelEntities(model);
-			std::cout << modelFilePath << " loaded" << std::endl;
-			return model;
-		}
-
-		return nullptr;
+		return GetModel(modelId, GL_TRIANGLES);
 	}
 	
+}
+
+TexturedModel * EntityManager::GetModelByNameAndMode(string modelId, GLenum mode)
+{
+	ModelMap::iterator it = myModels.find(modelId);
+	if (it != myModels.end())
+	{
+		return it->second;
+	}
+	else
+	{
+		return GetModel( modelId, mode);
+	}
+}
+
+TexturedModel * EntityManager::GetModel(string modelId, GLenum mode)
+{
+	//load the model
+	string filePath = Loader::GetInstance()->modelFilePath();
+	string modelFilePath = filePath.append(modelId).append(".obj");
+	TexturedModel* model =
+		Loader::GetInstance()->LoadToFromFile(modelFilePath.c_str(), mode);
+	if (model != nullptr)
+	{
+		model->SetId(modelId);
+		InsertModelEntities(model);
+		std::cout << modelFilePath << " loaded" << std::endl;
+		return model;
+	}
+
+	return nullptr;
 }
 
 EntityManager::~EntityManager()
@@ -99,64 +117,19 @@ EntityManager::~EntityManager()
 
 void EntityManager::ReplaceCenterModel(string modelId)
 {
-	TexturedModel* replaceModel (GetModel(modelId));
+	TexturedModel* replaceModel (GetModelByName(modelId));
 	GraphicsComponent* graphicsComponent = dynamic_cast<GraphicsComponent*>
 		(myCenterEntity->GetComponent("GraphicsComponent"));
 	graphicsComponent->SetTexturedModel(replaceModel);
-}
-
-void EntityManager::InitializeModels()
-{
-	/*vector<TexturedModel*> bunny = Loader::GetInstance()->LoadToFromFile("../Resources/Models/bunny.obj");
-	vector<TexturedModel*> sphereModel = Loader::GetInstance()->LoadToFromFile("../Resources/Models/sphere.obj");
-	vector<TexturedModel*> cube = Loader::GetInstance()->LoadToFromFile("../Resources/Models/cube.obj");
-	vector<TexturedModel*> teapot = Loader::GetInstance()->LoadToFromFile("../Resources/Models/teapot.obj");
-	vector<TexturedModel*> dragon = Loader::GetInstance()->LoadToFromFile("../Resources/Models/dragon.obj");
-
-
-	TexturedModel* model = bunny[0];
-	model->SetId("bunny");
-	InsertModelEntities(model);
-	
-	model = teapot[0];
-	model->SetId("teapot");
-	InsertModelEntities(model);
-
-	model = dragon[0];
-	model->SetId("dragon");
-	InsertModelEntities(model);
-
-	model = sphereModel[0];
-	model->SetId("sphere");
-	InsertModelEntities(model);
-
-	model = cube[0];
-	model->SetId("cube");
-	InsertModelEntities(model);
-*/
-
-	/*RawModel* rawModel = Loader::GetInstance()->LoadToVAO(vertices, textcoor, vector<vec3>(), indexes);
-	int normalsVectorSize = 0;
-	int normalsVBO = Loader::GetInstance()->ConstructNormalsVectorsVBO(vertices, indexes, normalsVectorSize);
-	rawModel->setNormalsVBO(normalsVBO);
-	rawModel->setNormalsCount(normalsVectorSize);
-	Texture* targetTtexture2 = new Texture(GL_TEXTURE_2D, "../Resources/Textures/dragonballzsuper.jpg");
-	Material* material2 = new Material(vec3(1.0f, 0.5f, 0.31f), vec3(1.0f, 0.5f, 0.31f), vec3(0.5f, 0.5f, 0.5f), 64.0f);
-	targetTtexture2->SetMaterial(material2);
-	vector<Texture*> myTextures = { targetTtexture2 };
-	TexturedModel* myModel = new TexturedModel(rawModel, myTextures);
-	
-	myModel->SetId("plane");
-	InsertModelEntities(myModel);*/
 }
 
 void EntityManager::Initialize()
 {
 	
 	//Initialize center model
-	//InitializeModels();
-	CreateEntity("teapot", vec3(0.0f, 11.0f, 3.0f), quat(), vec3(1.0f, 1.0f, 1.0f));
-	myCenterModelId = "teapot";
+	//CreateEntity("cube_divided1", vec3(0.0f, 11.0f, 3.0f), quat(), vec3(1.0f, 1.0f, 1.0f),GL_TRIANGLES_ADJACENCY);
+	CreateEntity("cube", vec3(0.0f, 11.0f, 3.0f), quat(), vec3(1.0f, 1.0f, 1.0f), GL_TRIANGLES);
+	myCenterModelId = "cube";
 
 
 
@@ -199,7 +172,7 @@ void EntityManager::RemoveEntity( unsigned int entityId)
 	
 }
 
-void EntityManager::CreateEntity(string modelId, vec3 postion, quat orientation, vec3 scale)
+void EntityManager::CreateEntity(string modelId, vec3 postion, quat orientation, vec3 scale, GLenum mode)
 {
 	myCenterEntity = new Entity();
 	TransformationComponent* transformation = new TransformationComponent(postion, orientation, scale);
@@ -208,11 +181,11 @@ void EntityManager::CreateEntity(string modelId, vec3 postion, quat orientation,
 	//Texture* targetTtexture = new Texture(GL_TEXTURE_2D, "../Resources/Textures/texture_sample.jpg");
 	Material* material = new Material(vec3(1.0f, 0.5f, 0.31f), vec3(1.0f, 0.5f, 0.31f), vec3(0.5f, 0.5f, 0.5f), 64.0f);
 	//material->AddTexture(targetTtexture);
-	GraphicsComponent* graphics = new GraphicsComponent(GetModel(modelId), material);
+	GraphicsComponent* graphics = new GraphicsComponent(GetModelByNameAndMode(modelId,mode), material);
 	myCenterEntity->AddComponent(graphics);
 
     SelectableBoundingVolumen* boundingVolumen = new BoundingSphere(0.7f);
-	boundingVolumen->SetModel(GetModel("sphere"));
+	boundingVolumen->SetModel(GetModelByName("sphere"));
 	myCenterEntity->AddComponent(boundingVolumen);
 
 	myCenterEntity->SetEntityId(myCurrentCenterModel);

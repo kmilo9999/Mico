@@ -229,7 +229,11 @@
     <None Include="Hatching.geometryshader" />
     <None Include="Hatching.vertexshader" />
     <None Include="LightModel.fragmentshader" />
+    <None Include="LightModel.geometryshader" />
     <None Include="LightModel.vertexshader" />
+    <None Include="NewLightModel.fragmentshader" />
+    <None Include="NewLightModel.geometryshader" />
+    <None Include="NewLightModel.vertexshader" />
     <None Include="NormalLines.fragmentshader" />
     <None Include="NormalLines.geometryshader" />
     <None Include="NormalLines.vertexshader" />

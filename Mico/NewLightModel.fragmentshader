@@ -1,0 +1,77 @@
+#version 430 core
+
+struct Material {
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+    float shininess;
+}; 
+
+struct Light {
+    vec3 position;
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+};
+
+uniform Material material;
+uniform Light light;
+uniform bool hasTexture;
+
+out vec4 color;
+uniform sampler2D textureColor;
+uniform float AmbientFactor;
+uniform float LightIntensity;
+uniform vec3 LightPos;
+uniform vec3 LightColor;
+uniform vec3 ViewPos;
+uniform bool isGround;
+
+in FragmentVertexData
+{
+    vec3 normal;
+	vec3 fragpos;
+	vec2 texCoord;
+} vertexData;
+
+
+void main(){
+  
+  
+  // color of the object
+  vec3 objectColor = vec3(1.0f, 0.5f, 0.31f);
+
+
+  // color from the texture
+  if(hasTexture)
+  {
+        if(isGround)
+		{
+			objectColor = texture(textureColor, vertexData.texCoord).rgb;
+		}
+  }
+  
+  
+  // Ambient
+  
+  vec3 ambient = light.ambient * material.ambient ;
+
+  vec3 normal = normalize(vertexData.normal);
+  vec3 lightDir = normalize(light.position - vertexData.fragpos);  
+  
+  float diff = max(dot(lightDir,normal), 0.0);
+  vec3 diffuse = light.diffuse * diff * material.diffuse ;
+
+  vec3 viewDir = normalize(ViewPos - vertexData.fragpos);
+  vec3 reflectDir = reflect(-lightDir, normal);  
+
+  vec3 halfwayDir = normalize(lightDir + viewDir );
+
+  float spec = pow(max(dot(normal, halfwayDir), 0.0), material.shininess);
+  
+  
+  vec3 specular = light.specular * spec * material.specular ; 
+ 
+  color = vec4((ambient + diffuse + specular) * objectColor, 1);
+ 
+}

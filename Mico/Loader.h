@@ -70,41 +70,12 @@ class Loader
 
 	struct Neighbors
 	{
-		uint n1 = 0;
-		uint n2 = 0;
+		uint n1 ;
+		uint n2 ;
 
-		Neighbors()
-		{
-			n1 = n2 = (uint)-1;
-		}
-
-		void AddNeigbor(uint n)
-		{
-			if (n1 == -1) {
-				n1 = n;
-			}
-			else if (n2 == -1) {
-				n2 = n;
-			}
-			else {
-				assert(0);
-			}
-		}
-
-		uint GetOther(uint me) const
-		{
-			if (n1 == me) {
-				return n2;
-			}
-			else if (n2 == me) {
-				return n1;
-			}
-			else {
-				assert(0);
-			}
-
-			return 0;
-		}
+		Neighbors();
+        void AddNeigbor(uint n);
+        uint GetOther(uint me) const;
 	};
 
 	struct CompareVectors
@@ -153,7 +124,7 @@ public:
 		const vector<vec2>& textCoodinates, const vector<vec3>& normals, const vector<int>& indexes);
 	
 	
-	TexturedModel* LoadToFromFile(const char* fileName);
+	TexturedModel* LoadToFromFile(const char* fileName, GLenum mode);
 	GLuint ConstructNormalsVectorsVBO(vector<vec3>& vertices,vector<int>& indices,int& size);
 
 	void FindAdjacencies(const aiMesh* paiMesh, vector<int>& Indices);
@@ -176,8 +147,8 @@ private:
 	void StoreDataInAttributeList(int attribute, int coordinateSize, const vector<vec2>&  data);
 	void BindIndicesBuffer(const vector<int>& indexes);
 
-	void ProcessNode(aiNode* node, const aiScene* scene, vector<TexturedModel*>& models);
-	void ProcessMesh(aiMesh* mesh, const aiScene* scene, vector<TexturedModel*>& models);
+	void ProcessNode(aiNode* node, const aiScene* scene, vector<TexturedModel*>& models, GLenum mode);
+	void ProcessMesh(aiMesh* mesh, const aiScene* scene, vector<TexturedModel*>& models, GLenum mode);
 	
 	void CleanUp();
 

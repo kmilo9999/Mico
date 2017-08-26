@@ -11,7 +11,7 @@ using namespace glm;
 class TexturedModel
 {
 public:
-	TexturedModel(RawModel* model);
+	TexturedModel(GLenum mode,RawModel* model);
 	TexturedModel(const TexturedModel& other);
 	TexturedModel& operator=(const TexturedModel& other);
 
@@ -37,10 +37,12 @@ public:
 
 	string GetId();
 	
+	void SetDrawMode(GLenum mode);
+	GLenum GetDrawModel();
 
 protected:
 	RawModel* myModel;
-
+	GLenum myDrawMode;
 	string id;
 
 };

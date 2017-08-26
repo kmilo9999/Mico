@@ -38,7 +38,7 @@ RawModel* Loader::LoadToVAO(const vector<vec3>& positions, const vector<vec2>& t
 	return  new RawModel(vao, (int)indexes.size());
 }
 
-TexturedModel* Loader::LoadToFromFile(const char * fileName)
+TexturedModel* Loader::LoadToFromFile( const char * fileName, GLenum mode )
 {
 	vector<TexturedModel*> models;
 	Assimp::Importer importer;
@@ -49,7 +49,7 @@ TexturedModel* Loader::LoadToFromFile(const char * fileName)
 	{
 		printf("Mesh %s load failed\n", fileName);
 	}
-	this->ProcessNode(scene->mRootNode, scene, models);
+	this->ProcessNode(scene->mRootNode, scene, models, mode);
 	
 	if (!models.empty())
 	{
@@ -158,8 +158,8 @@ void Loader::FindAdjacencies(const aiMesh * paiMesh, vector<int>& indices)
 			assert(m_indexMap.find(e) != m_indexMap.end());
 			Neighbors n = m_indexMap[e];
 			uint OtherTri = n.GetOther(i);
-
-			bool comp = OtherTri != -1;
+			uint minus1 = (uint)-1;
+			bool comp = (OtherTri != minus1);
 			assert(comp);
 
 			const Face& OtherFace = m_uniqueFaces[OtherTri];
@@ -170,6 +170,39 @@ void Loader::FindAdjacencies(const aiMesh * paiMesh, vector<int>& indices)
 		}
 	}
 
+}
+
+Loader::Neighbors::Neighbors()
+{
+	n1 = n2 = (uint)-1;
+}
+
+void Loader::Neighbors::AddNeigbor(uint n)
+{
+	if (n1 == -1) {
+		n1 = n;
+	}
+	else if (n2 == -1) {
+		n2 = n;
+	}
+	else {
+		assert(0);
+	}
+}
+
+uint Loader::Neighbors::GetOther(uint me) const
+{
+	if (n1 == me) {
+		return n2;
+	}
+	else if (n2 == me) {
+		return n1;
+	}
+	else {
+		assert(0);
+	}
+
+	return 0;
 }
 
 const string & Loader::modelFilePath()
@@ -235,7 +268,7 @@ void Loader::UnbindVAO()
 	glBindVertexArray(0);
 }
 
-void Loader::ProcessNode(aiNode* node, const aiScene* scene, vector<TexturedModel*>& models)
+void Loader::ProcessNode(aiNode* node, const aiScene* scene, vector<TexturedModel*>& models, GLenum mode)
 {
 	// Process each mesh located at the current node
 	for (GLuint i = 0; i < node->mNumMeshes; i++)
@@ -243,17 +276,17 @@ void Loader::ProcessNode(aiNode* node, const aiScene* scene, vector<TexturedMode
 		// The node object only contains indices to index the actual objects in the scene. 
 		// The scene contains all the data, node is just to keep stuff organized (like relations between nodes).
 		aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-		this->ProcessMesh(mesh, scene, models);
+		this->ProcessMesh(mesh, scene, models,mode);
 	}
 	// After we've processed all of the meshes (if any) we then recursively process each of the children nodes
 	for (GLuint i = 0; i < node->mNumChildren; i++)
 	{
-		this->ProcessNode(node->mChildren[i], scene, models);
+		this->ProcessNode(node->mChildren[i], scene, models, mode);
 	}
 
 }
 
-void Loader::ProcessMesh(aiMesh* mesh, const aiScene* scene, vector<TexturedModel*>& models)
+void Loader::ProcessMesh(aiMesh* mesh, const aiScene* scene, vector<TexturedModel*>& models, GLenum mode)
 {
 	// Data to fill
 	vector<vec3> vertices;
@@ -301,16 +334,27 @@ void Loader::ProcessMesh(aiMesh* mesh, const aiScene* scene, vector<TexturedMode
 		uv.push_back(vec);
 	}
 
-	FindAdjacencies(mesh, indices);
 
-	// Now wak through each of the mesh's faces (a face is a mesh its triangle) and retrieve the corresponding vertex indices.
-	//for (GLuint i = 0; i < mesh->mNumFaces; i++)
-	//{
-	//	aiFace face = mesh->mFaces[i];
-	//	// Retrieve all indices of the face and store them in the indices vector
-	//	for (GLuint j = 0; j < face.mNumIndices; j++)
-	//		indices.push_back(face.mIndices[j]);
-	//}
+	if (mode == GL_TRIANGLES_ADJACENCY)
+	{
+		FindAdjacencies(mesh, indices);
+	}
+	else
+	{
+		// process triangles by default
+
+		// Now wak through each of the mesh's faces (a face is a mesh its triangle) and retrieve the corresponding vertex indices.
+		for (GLuint i = 0; i < mesh->mNumFaces; i++)
+		{
+			aiFace face = mesh->mFaces[i];
+			// Retrieve all indices of the face and store them in the indices vector
+			for (GLuint j = 0; j < face.mNumIndices; j++)
+				indices.push_back(face.mIndices[j]);
+		}
+	}
+
+	
+
 	// Process materials
 
 	vec4 diffuseColor;
@@ -385,7 +429,7 @@ void Loader::ProcessMesh(aiMesh* mesh, const aiScene* scene, vector<TexturedMode
 	//rawModel->setNormalsVBO(normalsVBO);
 	rawModel->setNormalsCount(normalsVectorSize);
 	
-	TexturedModel* model = new TexturedModel(rawModel);
+	TexturedModel* model = new TexturedModel(mode,rawModel);
 	/*model->SpecularColor = specularColor;
 	model->DiffuseColor = diffuseColor;
 	model->AmbientColor = ambientColor;

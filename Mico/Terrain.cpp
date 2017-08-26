@@ -11,7 +11,7 @@ Terrain::Terrain(float x, float z):X(x),Z(z)
 	Texture* texture = new Texture(GL_TEXTURE_2D, "../Resources/Textures/texture_sample.jpg");
 	//Texture* texture = new Texture(GL_TEXTURE_2D, "../Resources/Textures/hatching/hatching_6.jpg");
 	
-	TexturedModel* model = new TexturedModel(GenerateTerrain());
+	TexturedModel* model = new TexturedModel(GL_TRIANGLES,GenerateTerrain());
 
 	// The terrain is not doing any light calcultations. I just put the  material becasue 
 	// needed to initialize the GraphicsComponent
