@@ -3,20 +3,16 @@ layout(location = 0) in vec3 vertexPosition;
 layout(location = 1) in vec2 texCoord;
 layout(location = 2) in vec3 normal;
 
-uniform mat4 ModelMatrix;
-
 out VertexData
 {
     vec3 normal;
-	vec3 fragpos;
 	vec2 textCoord;
 } vertex;
 
 // Values that stay constant for the whole mesh.
 
 void main(){
-  gl_Position =  ModelMatrix * vec4(vertexPosition,1.0f);
-  vertex.fragpos =  gl_Position.xyz;
+  gl_Position =  vec4(vertexPosition,1.0f);
   vertex.textCoord = texCoord;
-  vertex.normal = mat3(transpose(inverse(ModelMatrix))) * normal;
+  vertex.normal = normal;
 }

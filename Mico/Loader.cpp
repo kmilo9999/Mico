@@ -1,4 +1,8 @@
 #include "Loader.h"
+#include <iostream>
+#include <array>
+#include <vector>
+#include <map>
 
 Loader* Loader::instance(0);
 
@@ -107,7 +111,7 @@ GLuint Loader::ConstructNormalsVectorsVBO(vector<vec3>& vertices, vector<int>& i
 	return normal_vao;
 }
 
-void Loader::FindAdjacencies(const aiMesh * paiMesh, vector<int>& indices)
+void Loader::FindAdjacencies1(const aiMesh * paiMesh, vector<int>& indices)
 {
 	// Step 1 - find the two triangles that share every edge
 	for (uint i = 0; i < paiMesh->mNumFaces; i++) 
@@ -170,6 +174,66 @@ void Loader::FindAdjacencies(const aiMesh * paiMesh, vector<int>& indices)
 		}
 	}
 
+}
+
+void Loader::GenerateTFaces(const aiMesh * paiMesh, TFaces & Indices)
+{
+
+}
+
+void Loader::GenerateAdjacencies(const aiMesh * paiMesh, vector<int>& Indices)
+{
+
+	// associate each geometric vertex position with an unique ID
+	
+	std::vector<int>      uniqueMap;
+	std::map<TVertex, int> tempUniqueVertices;
+	int uniqueIndex = 0;
+	int numVertices = paiMesh->mNumVertices;
+
+
+	for (size_t vI = 0; vI < numVertices; ++vI)
+	{
+		aiVector3D vertex = paiMesh->mVertices[vI];
+		TVertex tVertex = { vertex.x,vertex.y,vertex.z};
+		auto vIt = tempUniqueVertices.find(tVertex);
+		if (vIt == tempUniqueVertices.end())
+		{
+			tempUniqueVertices[tVertex] = uniqueIndex;
+			uniqueMap.push_back(uniqueIndex);
+			uniqueIndex++;
+		}
+		else
+			uniqueMap.push_back(vIt->second);
+	}
+
+	std::map< std::tuple<int, int>, std::vector<int> > edges;
+	for (size_t fa = 0; fa < paiMesh->mNumFaces; ++fa)
+	{
+		for (int pI = 0; pI < 3; ++pI)
+		{
+			aiFace face = paiMesh->mFaces[fa];
+
+			int edgeU[2]{ uniqueMap[face.mIndices[pI]], uniqueMap[face.mIndices[(pI + 1) % 3]] };
+			int i0 = edgeU[0] < edgeU[1] ? 0 : 1;
+			edges[{ edgeU[i0], edgeU[1 - i0] }].push_back(face.mIndices[(pI + 2) % 3]);
+		}
+	}
+
+	// create the adjacencies
+	for (size_t fa = 0; fa < paiMesh->mNumFaces; ++fa)
+	{
+		for (int pI = 0; pI < 3; ++pI)
+		{
+			aiFace face = paiMesh->mFaces[fa];
+			int edgeU[2]{ uniqueMap[face.mIndices[pI]], uniqueMap[face.mIndices[(pI + 1) % 3]] };
+			int   i0 = edgeU[0] < edgeU[1] ? 0 : 1;
+			auto &adjs = edges[{ edgeU[i0], edgeU[1 - i0] }];
+			int   adjI = adjs.size() > 1 && adjs[0] == face.mIndices[(pI + 2) % 3] ? 1 : 0;
+			Indices.push_back(face.mIndices[pI]);
+			Indices.push_back(adjs[adjI]);
+		}
+	}
 }
 
 Loader::Neighbors::Neighbors()
@@ -337,19 +401,25 @@ void Loader::ProcessMesh(aiMesh* mesh, const aiScene* scene, vector<TexturedMode
 
 	if (mode == GL_TRIANGLES_ADJACENCY)
 	{
-		FindAdjacencies(mesh, indices);
+		GenerateAdjacencies(mesh, indices);
 	}
 	else
 	{
 		// process triangles by default
-
 		// Now wak through each of the mesh's faces (a face is a mesh its triangle) and retrieve the corresponding vertex indices.
 		for (GLuint i = 0; i < mesh->mNumFaces; i++)
 		{
 			aiFace face = mesh->mFaces[i];
+			
 			// Retrieve all indices of the face and store them in the indices vector
+			std::cout << "( " ;
 			for (GLuint j = 0; j < face.mNumIndices; j++)
+			{
 				indices.push_back(face.mIndices[j]);
+			  	//DEBUG: print indexes
+				std::cout << face.mIndices[j] << " ";
+			}
+			std::cout << " )" << std::endl;
 		}
 	}
 

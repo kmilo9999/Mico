@@ -16,6 +16,12 @@ using namespace glm;
 using namespace std;
 
 
+using TIndices = std::vector<int>;
+using TFace = std::array<int, 3>;
+using TFaces = std::vector<TFace>;
+using TVertex = std::array<float, 3>;
+using TVertices = std::vector<TVertex>;
+
 class Loader
 {
 
@@ -127,7 +133,8 @@ public:
 	TexturedModel* LoadToFromFile(const char* fileName, GLenum mode);
 	GLuint ConstructNormalsVectorsVBO(vector<vec3>& vertices,vector<int>& indices,int& size);
 
-	void FindAdjacencies(const aiMesh* paiMesh, vector<int>& Indices);
+	void FindAdjacencies1(const aiMesh* paiMesh, vector<int>& Indices);
+	void GenerateAdjacencies(const aiMesh* paiMesh, vector<int>& Indices);
 
 	const string& modelFilePath();
 	void setModelFilePath(const string& modelFilePath);
@@ -149,6 +156,8 @@ private:
 
 	void ProcessNode(aiNode* node, const aiScene* scene, vector<TexturedModel*>& models, GLenum mode);
 	void ProcessMesh(aiMesh* mesh, const aiScene* scene, vector<TexturedModel*>& models, GLenum mode);
+
+	void GenerateTFaces(const aiMesh* paiMesh, TFaces& Indices);
 	
 	void CleanUp();
 

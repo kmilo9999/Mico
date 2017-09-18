@@ -8,13 +8,40 @@
 
 EntityManager* EntityManager::instance(0);
 
-vector<vec3> vertices{  vec3(0.5f,  0.5f, 0.0f),
-						vec3(0.5f, -0.5f, 0.0f),
-						vec3(-0.5f, -0.5f, 0.0f),
-						vec3(-0.5f,  0.5f, 0.0f) };
-
-vector<int> indexes{ 2,1,0,
-					 0,3,2 };
+//vector<vec3> vertices{  vec3(1.0f,-1.0f,-1.0f),
+//						vec3(1.0f,-1.0f,1.0f),
+//						vec3(-1.0f,-1.0f,1.0f),
+//						vec3(-1.0f,-1.0f,-1.0f),
+//						vec3(1.0f,1.0f,-1.0f),
+//						vec3(1.0f,1.0f,1.0f),
+//						vec3(-1.0f,1.0f,1.0f),
+//						vec3(-1.0f,1.0f,-1.0f) };
+//
+//vector<vec2> textureCoordinates = { vec2(0.333333,0.666667),
+//						vec2(0.333333,1.000000),
+//						vec2(0.000000, 1.000000),
+//						vec2(0.000000,0.666667),
+//						vec2(0.000000,0.333333),
+//						vec2(0.333333,0.333333),
+//						vec2(0.333333,0.000000),
+//						vec2(0.666667,0.000000),
+//						vec2(0.000000,0.000000),
+//						vec2(1.000000,0.333333),
+//						vec2(0.666667,0.333333),
+//						vec2(0.666667,0.666667),
+//						vec2(1.000000,0.000000)
+//};
+//
+//vector<vec3> normals = { vec3(0.000000,-1.000000,0.000000),
+//						 vec3(0.000000,1.000000,0.000000),
+//						 vec3(1.000000,0.000000,0.000000),
+//						 vec3(-0.000000,0.000000,1.000000),
+//						 vec3(-1.000000,-0.000000,-0.000000),
+//						 vec3(0.000000,0.000000,-1.000000)
+//};
+//
+//vector<int> indexes{ 2,3,4,
+//					 0,3,2 };
 
 vector<vec2> textcoor{
 	vec2(1.0f, 1.0f), // Top Right
@@ -127,9 +154,9 @@ void EntityManager::Initialize()
 {
 	
 	//Initialize center model
-	//CreateEntity("cube_divided1", vec3(0.0f, 11.0f, 3.0f), quat(), vec3(1.0f, 1.0f, 1.0f),GL_TRIANGLES_ADJACENCY);
-	CreateEntity("cube", vec3(0.0f, 11.0f, 3.0f), quat(), vec3(1.0f, 1.0f, 1.0f), GL_TRIANGLES);
-	myCenterModelId = "cube";
+	//CreateEntity("cube", vec3(0.0f, 11.0f, 3.0f), quat(), vec3(1.0f, 1.0f, 1.0f), GL_TRIANGLES);
+	CreateEntity("bunny", vec3(0.0f, 11.0f, 3.0f), quat(), vec3(1.0f, 1.0f, 1.0f), GL_TRIANGLES_ADJACENCY);
+	myCenterModelId = "bunny";
 
 
 

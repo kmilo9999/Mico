@@ -16,5 +16,6 @@ public:
 	static vec3 Cross(vec3& v, vec3& w);
 	static quat Slerp(quat& q1, quat& q2, float t);
 	static float Distance(vec3& v, vec3& w);
+	static mat4& InverseTranspose(const mat4& matrix);
 };
 
