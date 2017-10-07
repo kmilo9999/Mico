@@ -63,6 +63,9 @@ void GraphicsSystem::Init()
 	shadowShader.LoadShaders("Shadows.vertexshader", "Shadows.fragmentshader");
 	hatchingShader.LoadShaders("Hatching.vertexshader", "Hatching.fragmentshader");
 	newLightModelShader.LoadShaders("NewLightModel.vertexshader", "NewLightModel.fragmentshader", "NewLightModel.geometryshader");
+	celShadingShader.LoadShaders("CelShading.vertexshader", "CelShading.fragmentshader");
+	goochShadingShader.LoadShaders("GoochShading.vertexshader", "GoochShading.fragmentshader");
+	edgeDetectShader.LoadShaders("EdgeDetector.vertexshader", "EdgeDetector.fragmentshader", "EdgeDetector.geometryshader");
 
 	lightModelShader.addUniform("ProjectionMatrix");
 	lightModelShader.addUniform("ViewMatrix");
@@ -134,6 +137,45 @@ void GraphicsSystem::Init()
 	newLightModelShader.addUniform("hasTexture");
 	newLightModelShader.addUniform("isGround");
 
+
+	celShadingShader.addUniform("ProjectionMatrix");
+	celShadingShader.addUniform("ViewMatrix");
+	celShadingShader.addUniform("ModelMatrix");
+	celShadingShader.addUniform("light.position");
+	celShadingShader.addUniform("light.ambient");
+	celShadingShader.addUniform("light.diffuse");
+	celShadingShader.addUniform("light.specular");
+	celShadingShader.addUniform("material.ambient");
+	celShadingShader.addUniform("material.diffuse");
+	celShadingShader.addUniform("material.specular");
+	celShadingShader.addUniform("material.shininess");
+	celShadingShader.addUniform("ViewPos");
+	celShadingShader.addUniform("numShades");
+
+	
+	goochShadingShader.addUniform("ProjectionMatrix");
+	goochShadingShader.addUniform("ViewMatrix");
+	goochShadingShader.addUniform("ModelMatrix");
+	goochShadingShader.addUniform("light.position");
+	goochShadingShader.addUniform("light.ambient");
+	goochShadingShader.addUniform("light.diffuse");
+	goochShadingShader.addUniform("light.specular");
+	goochShadingShader.addUniform("material.ambient");
+	goochShadingShader.addUniform("material.diffuse");
+	goochShadingShader.addUniform("material.specular");
+	goochShadingShader.addUniform("material.shininess");
+	goochShadingShader.addUniform("ViewPos");
+	goochShadingShader.addUniform("coolColor");
+	goochShadingShader.addUniform("warmColor");
+	goochShadingShader.addUniform("alpha");
+	goochShadingShader.addUniform("beta");
+
+    edgeDetectShader.addUniform("ProjectionMatrix");
+	edgeDetectShader.addUniform("ViewMatrix");
+	edgeDetectShader.addUniform("ModelMatrix");
+	edgeDetectShader.addUniform("ViewPos");
+
+
 	// Load 3D texture
 	vector<string> texturesVector;
 	texturesVector.push_back("../Resources/Textures/hatching/hatching2_1.jpg");
@@ -189,10 +231,15 @@ void GraphicsSystem::Update()
 	InitRender();
 	//RenderTextureToQuad(*shadowObjet.shadowFbo());
 
-	RenderTerrain();
+	//RenderTerrain();
 	//LightModelPass();
 	//HatchingPass();
-	NewLightModelPass();
+	
+	//NewLightModelPass();
+	//CelShadingPass();
+	//GoochShadingPass();
+
+	EdgeDetectionPass();
 
 	if (showNormals)
 	{
@@ -312,7 +359,8 @@ void GraphicsSystem::InitRender()
 	//glCullFace(GL_BACK);
 	glViewport(0, 0, windowSize.x, windowSize.y);
 
-	glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
+	//glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
+	glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -619,6 +667,116 @@ void GraphicsSystem::HatchingPass()
 		hatchingShader.stop();
 	}
 
+}
+
+void GraphicsSystem::CelShadingPass()
+{
+	//light pass
+	TransformationComponent* lightTransform = dynamic_cast<TransformationComponent*>(light->GetComponent("TransformationComponent"));
+
+	if (lightTransform)
+	{
+		celShadingShader.start();
+		celShadingShader.setUniform("ProjectionMatrix", projection);
+		celShadingShader.setUniform("ViewMatrix", camera->GetView());
+		celShadingShader.setUniform("light.position", lightTransform->GetPosition());
+		celShadingShader.setUniform("light.ambient", light->GetAmbient());
+		celShadingShader.setUniform("light.diffuse", light->GetDiffuse());
+		celShadingShader.setUniform("light.specular", light->GetSpecular());
+		celShadingShader.setUniform("ViewPos", camera->position);
+
+
+		vector<Entity*>::iterator it = EntityManager::GetInstance()->GetEntities().begin();
+		vector<Entity*>::iterator end = EntityManager::GetInstance()->GetEntities().end();
+		for (; it != end; ++it)
+		{
+			GraphicsComponent* entityGraphicsComponent = dynamic_cast<GraphicsComponent*>((*it)->GetComponent("GraphicsComponent"));
+			if (entityGraphicsComponent)
+			{
+				Material* material = entityGraphicsComponent->GetMaterial();
+				celShadingShader.setUniform("material.ambient", ambientColor);
+				celShadingShader.setUniform("material.diffuse", material->GetDiffuse());
+				celShadingShader.setUniform("material.specular", material->GetSpecular());
+				celShadingShader.setUniformf("material.shininess", material->GetShinines());
+				celShadingShader.setUniformi("numShades", material->GetBrighLevel());
+				entityGraphicsComponent->Draw(celShadingShader);
+			}
+		}
+
+		celShadingShader.stop();
+	}
+}
+
+void GraphicsSystem::GoochShadingPass()
+{
+	//light pass
+	TransformationComponent* lightTransform = dynamic_cast<TransformationComponent*>(light->GetComponent("TransformationComponent"));
+
+	if (lightTransform)
+	{
+		goochShadingShader.start();
+		goochShadingShader.setUniform("ProjectionMatrix", projection);
+		goochShadingShader.setUniform("ViewMatrix", camera->GetView());
+		goochShadingShader.setUniform("light.position", lightTransform->GetPosition());
+		goochShadingShader.setUniform("light.ambient", light->GetAmbient());
+		goochShadingShader.setUniform("light.diffuse", light->GetDiffuse());
+		goochShadingShader.setUniform("light.specular", light->GetSpecular());
+		goochShadingShader.setUniform("ViewPos", camera->position);
+
+
+		vector<Entity*>::iterator it = EntityManager::GetInstance()->GetEntities().begin();
+		vector<Entity*>::iterator end = EntityManager::GetInstance()->GetEntities().end();
+		for (; it != end; ++it)
+		{
+			GraphicsComponent* entityGraphicsComponent = dynamic_cast<GraphicsComponent*>((*it)->GetComponent("GraphicsComponent"));
+			if (entityGraphicsComponent)
+			{
+				Material* material = entityGraphicsComponent->GetMaterial();
+				goochShadingShader.setUniform("material.ambient", ambientColor);
+				goochShadingShader.setUniform("material.diffuse", material->GetDiffuse());
+				goochShadingShader.setUniform("material.specular", material->GetSpecular());
+				goochShadingShader.setUniformf("material.shininess", material->GetShinines());
+				goochShadingShader.setUniform("coolColor", material->GetColdColor());
+				goochShadingShader.setUniform("warmColor", material->GetWarmColor());
+				goochShadingShader.setUniformf("alpha", material->GetAlpha());
+				goochShadingShader.setUniformf("beta", material->GetBeta());
+
+				entityGraphicsComponent->Draw(goochShadingShader);
+			}
+		}
+
+		goochShadingShader.stop();
+	}
+}
+
+void GraphicsSystem::EdgeDetectionPass()
+{
+	//light pass
+	TransformationComponent* lightTransform = dynamic_cast<TransformationComponent*>(light->GetComponent("TransformationComponent"));
+
+	if (lightTransform)
+	{
+		edgeDetectShader.start();
+		edgeDetectShader.setUniform("ProjectionMatrix", projection);
+		edgeDetectShader.setUniform("ViewMatrix", camera->GetView());
+		edgeDetectShader.setUniform("ViewPos", camera->position);
+
+
+		vector<Entity*>::iterator it = EntityManager::GetInstance()->GetEntities().begin();
+		vector<Entity*>::iterator end = EntityManager::GetInstance()->GetEntities().end();
+		for (; it != end; ++it)
+		{
+			GraphicsComponent* entityGraphicsComponent = dynamic_cast<GraphicsComponent*>((*it)->GetComponent("GraphicsComponent"));
+			if (entityGraphicsComponent)
+			{
+				Material* material = entityGraphicsComponent->GetMaterial();
+
+				entityGraphicsComponent->Draw(edgeDetectShader);
+			}
+		}
+
+		edgeDetectShader.stop();
+	}
 }
 
 void GraphicsSystem::RenderSelectedVolumen()

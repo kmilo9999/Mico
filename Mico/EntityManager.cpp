@@ -154,9 +154,12 @@ void EntityManager::Initialize()
 {
 	
 	//Initialize center model
-	//CreateEntity("cube", vec3(0.0f, 11.0f, 3.0f), quat(), vec3(1.0f, 1.0f, 1.0f), GL_TRIANGLES);
-	CreateEntity("bunny", vec3(0.0f, 11.0f, 3.0f), quat(), vec3(1.0f, 1.0f, 1.0f), GL_TRIANGLES_ADJACENCY);
-	myCenterModelId = "bunny";
+	//CreateEntity("bunny", vec3(0.0f, 11.0f, 3.0f), quat(), vec3(1.0f, 1.0f, 1.0f), GL_TRIANGLES);
+	//CreateEntity("teapot", vec3(0.0f, 11.0f, 3.0f), quat(), vec3(1.0f, 1.0f, 1.0f), GL_TRIANGLES_ADJACENCY);
+	//myCenterModelId = "teapot";
+
+	CreateEntity("cube", vec3(0.0f, 11.0f, 3.0f), quat(), vec3(1.0f, 1.0f, 1.0f), GL_TRIANGLES_ADJACENCY);
+	myCenterModelId = "cube";
 
 
 
@@ -268,6 +271,60 @@ void EntityManager::ChangeColorMaterial(Event::UIEvtType eventype, vec3& newColo
 	}
 }
 
+void EntityManager::ChangeGoochParameter(Event::UIEvtType eventype, vec3 & newColor)
+{
+	GraphicsComponent* graphicsComponent
+		= dynamic_cast<GraphicsComponent*>(myCenterEntity->GetComponent("GraphicsComponent"));
+
+	Material* material = graphicsComponent->GetMaterial();
+	switch (eventype.type)
+	{
+	case Event::GoochColdColor:
+		material->SetColdColor(newColor);
+		break;
+	case Event::GoochWarmColor:
+		material->SetWarmColor(newColor);
+		break;
+	default:
+		break;
+	}
+}
+
+void EntityManager::ChangeGoochParameter(Event::UIEvtType eventype, float value)
+{
+	GraphicsComponent* graphicsComponent
+		= dynamic_cast<GraphicsComponent*>(myCenterEntity->GetComponent("GraphicsComponent"));
+
+	Material* material = graphicsComponent->GetMaterial();
+	switch (eventype.type)
+	{
+	case Event::GoochAlpha:
+		material->SetAlpha(value);
+		break;
+	case Event::GoochBeta:
+		material->SetBeta(value);
+		break;
+	default:
+		break;
+	}
+}
+
+void EntityManager::ChangeCelBrightLevelParameter(Event::UIEvtType eventype, float value)
+{
+	GraphicsComponent* graphicsComponent
+		= dynamic_cast<GraphicsComponent*>(myCenterEntity->GetComponent("GraphicsComponent"));
+
+	Material* material = graphicsComponent->GetMaterial();
+	switch (eventype.type)
+	{
+	case Event::CelBrightLevel:
+		material->SetBrighLevel(value);
+		break;
+	default:
+		break;
+	}
+}
+
 void EntityManager::onNotify(Event & event)
 {
 	switch (event.type)
@@ -298,6 +355,38 @@ void EntityManager::onNotify(Event & event)
 					  event.ui.specularColorG, event.ui.specularColorB);
 					ChangeColorMaterial(event.ui, color);
 			    }
+				break;
+			case Event::GoochColdColor:
+				{
+					vec3 color(event.ui.goochColdColorR,
+						event.ui.goochColdColorG, event.ui.goochColdColorB);
+					ChangeGoochParameter(event.ui, color);
+				}
+				break;
+			case Event::GoochWarmColor:
+				{
+					vec3 color(event.ui.goochWarmColorR,
+						event.ui.goochWarmColorG, event.ui.goochWarmColorB);
+					ChangeGoochParameter(event.ui, color);
+				}
+				break;
+			case Event::GoochAlpha:
+				{
+					float alpha = event.ui.goochAlpha;
+					ChangeGoochParameter(event.ui, alpha);
+				}
+				break;
+			case Event::GoochBeta:
+				{
+					float beta = event.ui.goochBeta;
+					ChangeGoochParameter(event.ui, beta);
+				}
+				break;
+			case Event::CelBrightLevel:
+			   {
+				  float level = event.ui.brightLevel;
+				  ChangeCelBrightLevelParameter(event.ui, level);
+			   }
 				break;
 			default:
 				break;

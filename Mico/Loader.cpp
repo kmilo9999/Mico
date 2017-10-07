@@ -410,16 +410,12 @@ void Loader::ProcessMesh(aiMesh* mesh, const aiScene* scene, vector<TexturedMode
 		for (GLuint i = 0; i < mesh->mNumFaces; i++)
 		{
 			aiFace face = mesh->mFaces[i];
-			
 			// Retrieve all indices of the face and store them in the indices vector
-			std::cout << "( " ;
 			for (GLuint j = 0; j < face.mNumIndices; j++)
 			{
 				indices.push_back(face.mIndices[j]);
-			  	//DEBUG: print indexes
-				std::cout << face.mIndices[j] << " ";
 			}
-			std::cout << " )" << std::endl;
+			
 		}
 	}
 

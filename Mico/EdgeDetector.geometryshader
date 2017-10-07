@@ -1,0 +1,110 @@
+#version 430 core
+layout(triangles_adjacency) in;
+layout(triangle_strip, max_vertices = 4) out;
+
+// constant values for the whole mesh.
+
+uniform mat4 ViewMatrix;
+uniform mat4 ProjectionMatrix;
+uniform mat4 ModelMatrix;
+uniform vec3 ViewPos;
+
+int edgeLenght =4;
+
+in VertexData
+{
+    vec3 normal;
+	vec2 textCoord;
+} vertex[];
+
+out FragmentVertexData
+{
+    vec3 normal;
+	vec3 fragpos;
+	vec2 texCoord;
+	int edgeFlag; 
+} VertexOut;
+ 
+
+void main(){
+
+  vec3 P0 = gl_in[0].gl_Position.xyz;
+  vec3 P1 = gl_in[2].gl_Position.xyz;
+  vec3 P2 = gl_in[4].gl_Position.xyz;
+
+  vec3 V0 = P1 - P0;
+  vec3 V1 = P2 - P0;
+  vec3 triangleNormal = cross(V0, V1);
+  triangleNormal  =  normalize(triangleNormal);
+
+ for (int i = 0; i < 6; i += 2)
+ {
+      vec4 fragPos = ModelMatrix * gl_in[i].gl_Position;
+	  vec3 fragNormal = mat3(transpose(inverse(ModelMatrix))) * vertex[i].normal;
+
+	  vec3 viewDir = normalize(ViewPos - fragPos.xyz);
+	  // front-facing ?
+	  if(dot(viewDir,triangleNormal ) <=0 )
+	  {
+		// check adjancent triangles
+		for(int i = 0; i < 6; i += 2)
+		{
+		   int iNextTri = (i+2)%6;
+		   vec3 V1 = gl_in[i].gl_Position.xyz;
+           vec3 V2 = gl_in[i+1].gl_Position.xyz;
+		   vec3 V3 = gl_in[iNextTri].gl_Position.xyz;
+		   
+		     
+		   vec3 adjV0 = V2 - V1;
+		   vec3 adjV1 = V3 - V1;
+		   vec3 adjTriangleNormal = cross(adjV0, adjV1);
+		   adjTriangleNormal  =  normalize(adjTriangleNormal);
+
+		    // back-facing ?
+			float dotView = dot(viewDir, adjTriangleNormal);
+	        if(dotView >= 0 )
+			{
+			  for(int v = 0; v < 2; v++)
+			  {
+				vec3 wsPos = fragPos.xyz + v * fragNormal * edgeLenght;
+				VertexOut.fragpos = wsPos;
+				VertexOut.normal = fragNormal;
+				VertexOut.edgeFlag = 1;
+				gl_Position = ProjectionMatrix * ViewMatrix * vec4(wsPos,1);
+				EmitVertex();
+			  }
+			 
+			  for(int v = 0; v < 2; v++)
+			  {
+				 vec4 adjPos = ModelMatrix * gl_in[iNextTri].gl_Position;
+				 vec3 adjNormal = mat3(transpose(inverse(ModelMatrix))) * vertex[iNextTri].normal;
+				 vec3 wsPos = adjPos.xyz + v * adjNormal * edgeLenght;
+				 VertexOut.fragpos = wsPos;
+				 VertexOut.normal = adjNormal;
+				 VertexOut.edgeFlag = 1;
+				 gl_Position = ProjectionMatrix * ViewMatrix * vec4(wsPos,1);
+				 EmitVertex();
+			  }
+
+			   EndPrimitive();
+			}
+		}
+	  }
+  } 
+  
+
+
+ for (int i = 0; i < 6; i += 2)
+ {
+        vec4 fragPos      = ModelMatrix * gl_in[i].gl_Position;
+        VertexOut.normal  = mat3(transpose(inverse(ModelMatrix))) * vertex[i].normal;
+        VertexOut.fragpos = fragPos.xyz;
+        gl_Position       = ProjectionMatrix * ViewMatrix * fragPos;
+        EmitVertex();
+ }
+ EndPrimitive();
+
+  
+
+
+}

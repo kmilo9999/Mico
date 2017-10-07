@@ -53,6 +53,9 @@ private:
 	ModelMap myModels;
 	void ChangeCenterModel(int index);
 	void ChangeColorMaterial(Event::UIEvtType type, vec3& newColor);
+	void ChangeGoochParameter(Event::UIEvtType type, vec3& newColor);
+	void ChangeGoochParameter(Event::UIEvtType type, float);
+	void ChangeCelBrightLevelParameter(Event::UIEvtType type, float);
 	static EntityManager* instance;
 	MODEL myCurrentCenterModel;
 	string myCenterModelId;

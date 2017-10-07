@@ -1,0 +1,78 @@
+#version 430 core
+
+struct Material {
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+    float shininess;
+}; 
+
+struct Light {
+    vec3 position;
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+};
+
+
+uniform Material material;
+uniform Light light;
+
+in vec2 TextCoord;
+in vec3 norm;
+in vec3 FragPos;
+
+uniform bool hasTexture;
+
+out vec4 color;
+uniform sampler2D textureColor;
+uniform float AmbientFactor;
+uniform float LightIntensity;
+uniform vec3 LightPos;
+uniform vec3 LightColor;
+uniform vec3 ViewPos;
+uniform bool isGround;
+
+// cool color of gooch shading
+uniform vec3 coolColor;
+// warm color of gooch shading
+uniform vec3 warmColor;
+// how much to take from object color in final cool color
+uniform float alpha;
+// how much to take from object color in final warm color
+uniform float beta;
+
+
+void main(){
+  
+  
+  // color of the object
+  vec3 objectColor = vec3(0.5, 0.5, 0.1);
+  vec3 specularColor = vec3(1.0, 1.0, 1.0);
+   
+  vec3 ka =  vec3( 0.5f, 0.5f, 0.5f ) ;
+
+   vec3 normal = normalize(norm);
+   vec3 lightDir = normalize(light.position - FragPos);  
+   float diff = dot(lightDir,normal);
+   
+   float interpolationValue = (1.0 + diff)/2;
+
+
+   vec3 coolColorMod = coolColor + objectColor * alpha;
+   // warm color mixed with color of the object
+   vec3 warmColorMod = warmColor + objectColor * beta;
+   // interpolation of cool and warm colors according 
+   // to lighting intensity. The lower the light intensity,
+   // the larger part of the cool color is used
+   vec3 kd = mix(coolColorMod, warmColorMod, interpolationValue);
+
+
+  vec3 viewDir = normalize(ViewPos - FragPos);
+  vec3 reflectDir = reflect(-lightDir, normal);  
+  float spec = pow(max(dot(viewDir, reflectDir), 0.0), 120);
+  vec3 ks = spec * specularColor ; 
+
+  color = vec4(kd, 1.0); 
+  
+}

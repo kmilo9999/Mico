@@ -60,3 +60,53 @@ std::vector<Texture*> Material::GetTextures()
 {
 	return textures;
 }
+
+void Material::SetWarmColor(vec3 color)
+{
+	myWarmColor = color;
+}
+
+vec3 Material::GetWarmColor()
+{
+	return myWarmColor;
+}
+
+void Material::SetColdColor(vec3 cold)
+{
+	myColdColor = cold;
+}
+
+vec3 Material::GetColdColor()
+{
+	return myColdColor;
+}
+
+void Material::SetAlpha(float alpha)
+{
+	myAlpha = alpha;
+}
+
+float Material::GetAlpha()
+{
+	return myAlpha;
+}
+
+void Material::SetBeta(float beta)
+{
+	myBeta = beta;
+}
+
+float Material::GetBeta()
+{
+	return myBeta;
+}
+
+void Material::SetBrighLevel(float value)
+{
+	myBrighLevel = value;
+}
+
+float Material::GetBrighLevel()
+{
+	return myBrighLevel;
+}

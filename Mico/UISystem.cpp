@@ -88,7 +88,70 @@ void UISystem::Update()
 		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 
 
-		static float f0 = 1.0f;
+		/*static int fBright = 4.0f;
+		ImGui::PushItemWidth(80);
+		ImGui::Text("Bright level:");
+		ImGui::SliderInt("Level", &fBright, 1, 10);
+		Event evtBright(Event::UI);
+		evtBright.ui.type = Event::CelBrightLevel;
+		evtBright.ui.brightLevel = fBright;
+		notify(evtBright);
+		ImGui::PopItemWidth();*/
+
+		static float fwcr = 1.0f;
+		static float fwcg = 0.5f;
+		static float fwcb = 0.31f;
+		ImGui::PushItemWidth(80);
+		ImGui::Text("Warm color:");
+		ImGui::SliderFloat("RWC", &fwcr, 0.0f, 1.0f); ImGui::SameLine();
+		ImGui::SliderFloat("GWC", &fwcg, 0.0f, 1.0f); ImGui::SameLine();
+		ImGui::SliderFloat("BWC", &fwcb, 0.0f, 1.0f);
+		Event evtWarmColor(Event::UI);
+		evtWarmColor.ui.type = Event::GoochWarmColor;
+		evtWarmColor.ui.goochWarmColorR = fwcr;
+		evtWarmColor.ui.goochWarmColorG = fwcg;
+		evtWarmColor.ui.goochWarmColorB = fwcb;
+		notify(evtWarmColor);
+		ImGui::PopItemWidth();
+
+		static float fccr = 1.0f;
+		static float fccg = 0.5f;
+		static float fccb = 0.31f;
+		ImGui::PushItemWidth(80);
+		ImGui::Text("Cold color:");
+		ImGui::SliderFloat("RCC", &fccr, 0.0f, 1.0f); ImGui::SameLine();
+		ImGui::SliderFloat("GCC", &fccg, 0.0f, 1.0f); ImGui::SameLine();
+		ImGui::SliderFloat("BCC", &fccb, 0.0f, 1.0f);
+		Event evtColdmColor(Event::UI);
+		evtColdmColor.ui.type = Event::GoochColdColor;
+		evtColdmColor.ui.goochColdColorR = fccr;
+		evtColdmColor.ui.goochColdColorG = fccg;
+		evtColdmColor.ui.goochColdColorB = fccb;
+		notify(evtColdmColor);
+		ImGui::PopItemWidth();
+
+		static float falpha = 1.0f;
+		ImGui::PushItemWidth(80);
+		ImGui::Text("Alpha Factor:");
+		ImGui::SliderFloat("Alpha", &falpha, 0.0f, 1.0f);
+		Event evtAplha(Event::UI);
+		evtAplha.ui.type = Event::GoochAlpha;
+		evtAplha.ui.goochAlpha = falpha;
+		notify(evtAplha);
+		ImGui::PopItemWidth();
+
+
+		static float fbeta = 1.0f;
+		ImGui::PushItemWidth(80);
+		ImGui::Text("Beta Factor:");
+		ImGui::SliderFloat("Beta", &fbeta, 0.0f, 1.0f);
+		Event evtBeta(Event::UI);
+		evtBeta.ui.type = Event::GoochBeta;
+		evtBeta.ui.goochBeta = fbeta;
+		notify(evtBeta);
+		ImGui::PopItemWidth();
+
+		/*static float f0 = 1.0f;
 		static float f1 = 0.5f;
 		static float f2 = 0.31f;
 		ImGui::PushItemWidth(80);
@@ -135,7 +198,7 @@ void UISystem::Update()
 		evtMaterialSpecularChanged.ui.specularColorG = f21;
 		evtMaterialSpecularChanged.ui.specularColorB = f22;
 		notify(evtMaterialSpecularChanged);
-		ImGui::PopItemWidth();
+		ImGui::PopItemWidth();*/
 	}
 
 	//// 2. Show another simple window, this time using an explicit Begin/End pair

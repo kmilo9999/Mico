@@ -21,7 +21,12 @@ class Event {
 		   ChangeModel,
 		   MaterialAmbient,
 		   MaterialDiffuse,
-		   MaterialSpecular
+		   MaterialSpecular,
+		   GoochWarmColor,
+		   GoochColdColor,
+		   GoochAlpha,
+		   GoochBeta,
+		   CelBrightLevel
 	   };
 
 	   Event(EventType type) :type(type) {};
@@ -74,6 +79,15 @@ class Event {
 		   float specularColorR;
 		   float specularColorG;
 		   float specularColorB;
+		   float goochWarmColorR;
+		   float goochWarmColorG;
+		   float goochWarmColorB;
+		   float goochColdColorR;
+		   float goochColdColorG;
+		   float goochColdColorB;
+		   float goochAlpha;
+		   float goochBeta;
+		   float brightLevel;
 	   };
 
 	   EventType type;

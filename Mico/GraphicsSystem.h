@@ -33,6 +33,9 @@ public:
 	void ShadowPass();
 	void LightModelPass();
 	void HatchingPass();
+	void CelShadingPass();
+	void GoochShadingPass();
+	void EdgeDetectionPass();
 
 	// this mode use geometry shaders to pass from triangle adjanceny to triangles
 	// and compute bing phong light calculation
@@ -59,7 +62,10 @@ private:
 	ShaderProgram renderToQuadShader;
 	ShaderProgram hatchingShader;
 	ShaderProgram newLightModelShader;
-	
+	ShaderProgram celShadingShader;
+	ShaderProgram goochShadingShader;
+	ShaderProgram edgeDetectShader;
+
 	ShadowObject shadowObjet;
 
 

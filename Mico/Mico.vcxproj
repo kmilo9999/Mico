@@ -225,6 +225,13 @@
     <ClInclude Include="WindowSystem.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="CelShading.fragmentshader" />
+    <None Include="CelShading.vertexshader" />
+    <None Include="EdgeDetector.fragmentshader" />
+    <None Include="EdgeDetector.geometryshader" />
+    <None Include="EdgeDetector.vertexshader" />
+    <None Include="GoochShading.fragmentshader" />
+    <None Include="GoochShading.vertexshader" />
     <None Include="Hatching.fragmentshader" />
     <None Include="Hatching.geometryshader" />
     <None Include="Hatching.vertexshader" />

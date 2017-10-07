@@ -304,5 +304,26 @@
     <None Include="NewLightModel.vertexshader">
       <Filter>shaders</Filter>
     </None>
+    <None Include="CelShading.fragmentshader">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="CelShading.vertexshader">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="GoochShading.fragmentshader">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="GoochShading.vertexshader">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="EdgeDetector.fragmentshader">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="EdgeDetector.geometryshader">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="EdgeDetector.vertexshader">
+      <Filter>shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>
