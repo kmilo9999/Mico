@@ -173,6 +173,14 @@ void GraphicsSystem::Init()
     edgeDetectShader.addUniform("ProjectionMatrix");
 	edgeDetectShader.addUniform("ViewMatrix");
 	edgeDetectShader.addUniform("ModelMatrix");
+	edgeDetectShader.addUniform("light.position");
+	edgeDetectShader.addUniform("light.ambient");
+	edgeDetectShader.addUniform("light.diffuse");
+	edgeDetectShader.addUniform("light.specular");
+	edgeDetectShader.addUniform("material.ambient");
+	edgeDetectShader.addUniform("material.diffuse");
+	edgeDetectShader.addUniform("material.specular");
+	edgeDetectShader.addUniform("material.shininess");
 	edgeDetectShader.addUniform("ViewPos");
 
 
@@ -759,6 +767,10 @@ void GraphicsSystem::EdgeDetectionPass()
 		edgeDetectShader.start();
 		edgeDetectShader.setUniform("ProjectionMatrix", projection);
 		edgeDetectShader.setUniform("ViewMatrix", camera->GetView());
+		edgeDetectShader.setUniform("light.position", lightTransform->GetPosition());
+		edgeDetectShader.setUniform("light.ambient", light->GetAmbient());
+		edgeDetectShader.setUniform("light.diffuse", light->GetDiffuse());
+		edgeDetectShader.setUniform("light.specular", light->GetSpecular());
 		edgeDetectShader.setUniform("ViewPos", camera->position);
 
 
@@ -770,7 +782,10 @@ void GraphicsSystem::EdgeDetectionPass()
 			if (entityGraphicsComponent)
 			{
 				Material* material = entityGraphicsComponent->GetMaterial();
-
+				edgeDetectShader.setUniform("material.ambient", ambientColor);
+				edgeDetectShader.setUniform("material.diffuse", material->GetDiffuse());
+				edgeDetectShader.setUniform("material.specular", material->GetSpecular());
+				edgeDetectShader.setUniformf("material.shininess", material->GetShinines());
 				entityGraphicsComponent->Draw(edgeDetectShader);
 			}
 		}
