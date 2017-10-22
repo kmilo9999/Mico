@@ -1,6 +1,6 @@
 #version 430 core
 layout(triangles_adjacency) in;
-layout(triangle_strip, max_vertices = 12) out;
+layout(triangle_strip, max_vertices = 18) out;
 
 // constant values for the whole mesh.
 
@@ -10,7 +10,7 @@ uniform mat4 ModelMatrix;
 uniform vec3 ViewPos;
 uniform mat4 ViewInverse;
 
-float edgeLenght = 0.1;
+float edgeLenght = 0.015;
 
 in VertexData
 {
@@ -104,34 +104,34 @@ void main(){
 
 			   
 			  // extra triangles to complete the geometry
-			  vec3 edg1 = edv1 - V1;
-			  vec3 projNomralScreenSpace= fragNormal;
-			  float projDotPr = (dot(edg1,projNomralScreenSpace));
-			  float edlengh = length(projNomralScreenSpace);
-			  vec3 prj1 = (projDotPr/ edlengh)* projNomralScreenSpace;
-			   
-			   gl_Position = ProjectionMatrix * ViewMatrix * vec4(V1,1);
+			  vec2 s0 = vec2(ProjectionMatrix * ViewMatrix * vec4(V1,1));
+			  vec2 s1 = vec2(ProjectionMatrix * ViewMatrix * adjPos);
+			  vec2 p = vec2(s0.y - s1.y,s1.x - s0.x);
+			  p =  normalize(p);
+			  vec2 vector1 = (V1 + fragNormal).xy - s0;
+			  vec2 vector2 = (adjPos - adjFragNormal).xy - s1;
+			  vec2 m0 = normalize(vec2(ProjectionMatrix * ViewMatrix * vec4(vector1,1,1)));
+			  vec2 m1 = normalize(vec2(ProjectionMatrix * ViewMatrix * vec4( vector2,1,1)));
+
+			   gl_Position = vec4(s0 + m0,1,1);
 			   EmitVertex();
-			   gl_Position = ProjectionMatrix * ViewMatrix * vec4(edv1,1);
+			   float mySign = sign(dot(m0, p));
+			   vec2 posi0 = s0 + ( p * mySign);
+			   gl_Position = vec4(posi0,1.0f,1.0f);
 			   EmitVertex();
-			   gl_Position = ProjectionMatrix * ViewMatrix * vec4(prj1,1);
+			   gl_Position = vec4(s0,1,1);
 			   VertexOut.edgeFlag = 1;
 			   EmitVertex();
 
 			   EndPrimitive();
-
-			  vec3 edg2 = edv2 - adjPos.xyz;
-			  vec3 projNomralScreenSpace2= adjFragNormal;
-			  float projDotPr2 = (dot(edg2,projNomralScreenSpace2));
-			  float edlengh2 = length(projNomralScreenSpace2);
-			  vec3 prj2 = (projDotPr2/ edlengh2)* projNomralScreenSpace2;
 			   
-			  
-			   gl_Position = ProjectionMatrix * ViewMatrix * vec4(adjPos.xyz,1);
+			   gl_Position =  vec4(s1 + m1,1,1);
 			   EmitVertex();
-			   gl_Position = ProjectionMatrix * ViewMatrix * vec4(prj2,1);
+			   float mySign1 = sign(dot(m1, p));
+			   vec2 posi1 = s1 + ( p * mySign);
+			   gl_Position = vec4(posi1,1.0f,1.0f);
 			   EmitVertex();
-			   gl_Position = ProjectionMatrix * ViewMatrix * vec4(edv2,1);
+			   gl_Position = vec4(s1,1,1);
 			   VertexOut.edgeFlag = 1;
 			   EmitVertex();
 
