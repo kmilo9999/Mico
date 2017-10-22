@@ -158,8 +158,8 @@ void EntityManager::Initialize()
 	//CreateEntity("teapot", vec3(0.0f, 11.0f, 3.0f), quat(), vec3(1.0f, 1.0f, 1.0f), GL_TRIANGLES_ADJACENCY);
 	//myCenterModelId = "teapot";
 
-	CreateEntity("cube", vec3(0.0f, 11.0f, 3.0f), quat(), vec3(1.0f, 1.0f, 1.0f), GL_TRIANGLES_ADJACENCY);
-	myCenterModelId = "cube";
+	CreateEntity("teapot", vec3(0.0f, 11.0f, 3.0f), quat(), vec3(1.0f, 1.0f, 1.0f), GL_TRIANGLES_ADJACENCY);
+	myCenterModelId = "teapot";
 
 
 

@@ -1,6 +1,6 @@
 #version 430 core
 layout(triangles_adjacency) in;
-layout(triangle_strip, max_vertices = 4) out;
+layout(triangle_strip, max_vertices = 12) out;
 
 // constant values for the whole mesh.
 
@@ -8,6 +8,7 @@ uniform mat4 ViewMatrix;
 uniform mat4 ProjectionMatrix;
 uniform mat4 ModelMatrix;
 uniform vec3 ViewPos;
+uniform mat4 ViewInverse;
 
 float edgeLenght = 0.1;
 
@@ -28,24 +29,28 @@ out FragmentVertexData
 
 void main(){
 
+ 
   vec3 P0 = vec3(ModelMatrix * gl_in[0].gl_Position);
   vec3 P1 = vec3(ModelMatrix * gl_in[2].gl_Position);
   vec3 P2 = vec3(ModelMatrix * gl_in[4].gl_Position);
 
   vec3 V0 = P1 - P0;
   vec3 V1 = P2 - P0;
-  vec3 triangleNormal = cross(V0, V1);
+  vec3 triangleNormal = cross( V1, V0);
   triangleNormal  =  normalize(triangleNormal);
 
   // Center of the triangle
   vec3 triangleCentroid = (P0+P1+P2) / 3.0;
 
-  vec3 viewDir = normalize(ViewPos - triangleCentroid);
+
+  //vec3 cameraPos = normalize((ViewInverse *vec4(0,0,0,1)).xyz);
+  vec3 cameraPos = ViewPos;
+  vec3 viewDir = normalize( triangleCentroid - cameraPos   );
 
   // front-facing ?
   if(dot(viewDir,triangleNormal ) <=0)
   {
-	// check adjancent triangles
+	    // check adjancent triangles
 		for(int i = 0; i < 6; i += 2)
 		{
 		   int iNextTri = (i+2)%6;
@@ -55,18 +60,21 @@ void main(){
 		   
 		   vec3 adjV0 = normalize(V2 - V1);
 		   vec3 adjV1 = normalize(V3 - V1);
-		   vec3 adjTriangleNormal = cross(adjV0, adjV1);
+		   vec3 adjTriangleNormal = cross( adjV1,adjV0);
 		   adjTriangleNormal  =  normalize(adjTriangleNormal);
 
 		   vec3 adjTriangleCentroid = (V1+V2+V3) / 3.0;
-		   vec3 adjViewDir = normalize( ViewPos - V1 );
+		   vec3 adjViewDir = normalize(   adjTriangleCentroid - cameraPos );
+
+		   vec3 edv1 = vec3(0);
+		   vec3 edv2 = vec3(0);
 
 		    // back-facing ?
 			float dotView = dot(adjViewDir, adjTriangleNormal);
 	        if(dotView >= 0)
 			{
 			  vec3 fragNormal =normalize( mat3(transpose(inverse(ModelMatrix))) * vertex[i].normal);
-			  for(int adjv1 = 0; adjv1 < 2; adjv1++)
+			  for(int adjv1 = 1 ; adjv1 >= 0; adjv1--)
 			  {
 				vec3 wsPos = V1 + adjv1 * fragNormal * edgeLenght;
 				VertexOut.fragpos = wsPos;
@@ -75,10 +83,12 @@ void main(){
 				gl_Position = ProjectionMatrix * ViewMatrix * vec4(wsPos,1);
 				EmitVertex();
 			  }
-			 
+			  
+			  edv1 = V1 + fragNormal * edgeLenght;
+
 			  vec3 adjFragNormal = normalize(mat3(transpose(inverse(ModelMatrix))) * vertex[iNextTri].normal);
 			  vec4 adjPos = ModelMatrix * gl_in[iNextTri].gl_Position;
-			  for(int adjv2 = 0; adjv2 < 2; adjv2++)
+			  for(int adjv2 = 1; adjv2 >= 0; adjv2--)
 			  {
 				 vec3 wsPos = adjPos.xyz + adjv2 * adjFragNormal * edgeLenght;
 				 VertexOut.fragpos = wsPos;
@@ -88,9 +98,51 @@ void main(){
 				 EmitVertex();
 			  }
 
+			   edv2 = adjPos.xyz + adjFragNormal* edgeLenght;
+
 			   EndPrimitive();
+
+			   
+			  // extra triangles to complete the geometry
+			  vec3 edg1 = edv1 - V1;
+			  vec3 projNomralScreenSpace= fragNormal;
+			  float projDotPr = (dot(edg1,projNomralScreenSpace));
+			  float edlengh = length(projNomralScreenSpace);
+			  vec3 prj1 = (projDotPr/ edlengh)* projNomralScreenSpace;
+			   
+			   gl_Position = ProjectionMatrix * ViewMatrix * vec4(V1,1);
+			   EmitVertex();
+			   gl_Position = ProjectionMatrix * ViewMatrix * vec4(edv1,1);
+			   EmitVertex();
+			   gl_Position = ProjectionMatrix * ViewMatrix * vec4(prj1,1);
+			   VertexOut.edgeFlag = 1;
+			   EmitVertex();
+
+			   EndPrimitive();
+
+			  vec3 edg2 = edv2 - adjPos.xyz;
+			  vec3 projNomralScreenSpace2= adjFragNormal;
+			  float projDotPr2 = (dot(edg2,projNomralScreenSpace2));
+			  float edlengh2 = length(projNomralScreenSpace2);
+			  vec3 prj2 = (projDotPr2/ edlengh2)* projNomralScreenSpace2;
+			   
+			  
+			   gl_Position = ProjectionMatrix * ViewMatrix * vec4(adjPos.xyz,1);
+			   EmitVertex();
+			   gl_Position = ProjectionMatrix * ViewMatrix * vec4(prj2,1);
+			   EmitVertex();
+			   gl_Position = ProjectionMatrix * ViewMatrix * vec4(edv2,1);
+			   VertexOut.edgeFlag = 1;
+			   EmitVertex();
+
+			   EndPrimitive();
+
+
 			}
 		}
+
+
+
   }
   
 

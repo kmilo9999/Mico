@@ -1,6 +1,6 @@
 #version 430 core
 layout(triangles_adjacency) in;
-layout(line_strip, max_vertices = 6) out;
+layout(line_strip, max_vertices = 14) out;
 
 //layout(triangles) in;
 //layout(line_strip, max_vertices = 14) out;
@@ -8,11 +8,20 @@ layout(line_strip, max_vertices = 6) out;
 uniform mat4 ModelMatrix;
 uniform mat4 ViewMatrix;
 uniform mat4 ProjectionMatrix;
+uniform mat4 ViewInverse;
+
+uniform vec3 ViewPos;
 
 in Vertex
 {
   vec3 normal;
 } vertex[];
+
+out normalVerteData
+{
+	flat int isFaceNormal; 
+	vec3 color;
+} VertexOut;
 
 out vec4 myColor;
 
@@ -28,27 +37,57 @@ void main(){
   vec3 V1 = P2 - P0;
   
   // Center of the triangle
-  //vec3 P = (P0+P1+P2) / 3.0;
+  vec3 triangleCentroid = (P0+P1+P2) / 3.0;
 
-  vec3 N = cross(V0, V1);
+  vec3 triangleNormal = cross(V1 , V0 );
   
-  N = normalize(N);
-  for(int i=0; i<gl_in.length(); i++)
+  //triangleNormal = normalize(triangleNormal);
+   
+  vec3 cameraPos = (ViewInverse *vec4(0,0,0,1)).xyz;
+ 
+
+  vec3 viewDir =  normalize(triangleCentroid - cameraPos );
+
+  if(dot(viewDir,triangleNormal ) <=0)
+  {
+    // red if front facing
+	VertexOut.color = vec3(1,0.0,0.0);
+  }
+  else
+  {
+  // greenish if back facing
+   VertexOut.color = vec3(0.0,1.0,0.2);
+  }
+  VertexOut.isFaceNormal = 1;
+
+  gl_Position = ProjectionMatrix * ViewMatrix * ModelMatrix  * vec4(triangleCentroid, 1.0);
+  EmitVertex();
+  
+
+  gl_Position = ProjectionMatrix * ViewMatrix * ModelMatrix  * vec4(triangleCentroid + triangleNormal * 2, 1.0);
+  EmitVertex();
+  
+
+  EndPrimitive();
+
+  for(int i=0; i<gl_in.length(); i+=2)
   {
     vec3 P = gl_in[i].gl_Position.xyz;
-    //vec3 N =  vertex[i].normal.xyz;
+    vec3 N =  vertex[i].normal.xyz;
 	
+	VertexOut.isFaceNormal = 0;
+
     gl_Position = ProjectionMatrix * ViewMatrix * ModelMatrix  * vec4(P, 1.0);
     EmitVertex();
     
+	
+
     gl_Position = ProjectionMatrix * ViewMatrix * ModelMatrix  * vec4(P + N * 2, 1.0);
     EmitVertex();
+	
+	VertexOut.isFaceNormal = 0;
     
     EndPrimitive();
   }
-
-
-
-
 
 }

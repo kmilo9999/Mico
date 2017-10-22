@@ -6,6 +6,7 @@
 #include "glm\glm.hpp"
 #include <glm/gtx/transform.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/matrix_inverse.hpp>
 #include "Math.h"
 #include "WindowSystem.h"
 #include "TransformationComponent.h"
@@ -98,6 +99,8 @@ void GraphicsSystem::Init()
 	normalRenderShader.addUniform("ProjectionMatrix");
 	normalRenderShader.addUniform("ViewMatrix");
 	normalRenderShader.addUniform("ModelMatrix");
+	normalRenderShader.addUniform("ViewPos");
+	normalRenderShader.addUniform("ViewInverse");
 
 	Fbo* shadowframeBuffer = new Fbo();
 	shadowframeBuffer->CreateFBO(1024, 1024);
@@ -182,7 +185,7 @@ void GraphicsSystem::Init()
 	edgeDetectShader.addUniform("material.specular");
 	edgeDetectShader.addUniform("material.shininess");
 	edgeDetectShader.addUniform("ViewPos");
-
+	edgeDetectShader.addUniform("ViewInverse");
 
 	// Load 3D texture
 	vector<string> texturesVector;
@@ -362,7 +365,7 @@ void GraphicsSystem::onNotify(Event & evt)
 void GraphicsSystem::InitRender()
 {
 
-	//glEnable(GL_CULL_FACE);
+	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
 	//glCullFace(GL_BACK);
 	glViewport(0, 0, windowSize.x, windowSize.y);
@@ -547,6 +550,12 @@ void GraphicsSystem::RenderNormals()
 	normalRenderShader.start();
 	normalRenderShader.setUniform("ProjectionMatrix", projection);
 	normalRenderShader.setUniform("ViewMatrix", view);
+	normalRenderShader.setUniform("ViewPos", camera->position);
+	
+	mat4 viewM = camera->GetView();
+	mat4x4 WorldInv = affineInverse(viewM);
+	normalRenderShader.setUniform("ViewInverse", WorldInv);
+
 	vector<Entity*>::iterator it = EntityManager::GetInstance()->GetEntities().begin();
 	vector<Entity*>::iterator end = EntityManager::GetInstance()->GetEntities().end();
 	for (; it != end; ++it)
@@ -770,8 +779,12 @@ void GraphicsSystem::EdgeDetectionPass()
 		edgeDetectShader.setUniform("light.position", lightTransform->GetPosition());
 		edgeDetectShader.setUniform("light.ambient", light->GetAmbient());
 		edgeDetectShader.setUniform("light.diffuse", light->GetDiffuse());
-		edgeDetectShader.setUniform("light.specular", light->GetSpecular());
+		edgeDetectShader.setUniform("light.specular", light->GetSpecular());	
 		edgeDetectShader.setUniform("ViewPos", camera->position);
+
+		mat4 viewM = camera->GetView();
+		mat4x4 WorldInv = affineInverse(viewM);
+		edgeDetectShader.setUniform("ViewInverse", WorldInv);
 
 
 		vector<Entity*>::iterator it = EntityManager::GetInstance()->GetEntities().begin();

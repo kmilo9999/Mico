@@ -4,8 +4,22 @@ in vec4 myColor;
 out vec4 color;
 
 
+in normalVerteData
+{
+	flat int isFaceNormal; 
+	vec3 color;
+} VertexOut;
+
 void main(){
   
-  color  = myColor; 
+  if(VertexOut.isFaceNormal == 1)
+  {
+    color  = vec4(VertexOut.color,1); 
+  }
+  else
+  {
+    color  = vec4(1,0.7,0,1); 
+  }
+  
   
 }
