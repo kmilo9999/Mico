@@ -2,6 +2,8 @@
 #include <glm/gtx/transform.hpp>
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtx/norm.hpp>
+#include <glm/gtx/euler_angles.hpp>
+
 Math::Math()
 {
 }
@@ -69,6 +71,11 @@ float Math::Dot(vec3& v, vec3& w)
 vec3 Math::EulerAngles(quat q)
 {
 	return glm::eulerAngles(q);
+}
+
+quat Math::fromEulerAngles(vec3 eulerAngles)
+{
+	return glm::toQuat(glm::orientate3(eulerAngles));
 }
 
 quat Math::GetRotation(vec3& orig, vec3& dest, vec3& up)
@@ -221,4 +228,9 @@ mat4 & Math::InverseTranspose(const mat4 & m)
 	Inverse /= Determinant;
 
 	return Inverse;
+}
+
+quat Math::angleAxis(float angle, vec3 axis)
+{
+	return angleAxis(degrees(angle), axis);
 }

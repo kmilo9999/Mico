@@ -154,6 +154,7 @@
     <ClCompile Include="BoundingVolumen.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Entity.cpp" />
+    <ClCompile Include="EntityLuaObject.cpp" />
     <ClCompile Include="EntityManager.cpp" />
     <ClCompile Include="FBO.cpp" />
     <ClCompile Include="GLError.cpp" />
@@ -163,6 +164,7 @@
     <ClCompile Include="imgui_demo.cpp" />
     <ClCompile Include="imgui_draw.cpp" />
     <ClCompile Include="Loader.cpp" />
+    <ClCompile Include="LuaTransformationComponentObject.cpp" />
     <ClCompile Include="lua\lapi.c" />
     <ClCompile Include="lua\lauxlib.c" />
     <ClCompile Include="lua\lbaselib.c" />
@@ -224,6 +226,7 @@
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Component.h" />
     <ClInclude Include="Entity.h" />
+    <ClInclude Include="EntityLuaObject.h" />
     <ClInclude Include="EntityManager.h" />
     <ClInclude Include="FBO.h" />
     <ClInclude Include="GLError.h" />
@@ -233,6 +236,7 @@
     <ClInclude Include="imgui.h" />
     <ClInclude Include="imgui_internal.h" />
     <ClInclude Include="Loader.h" />
+    <ClInclude Include="LuaTransformationComponentObject.h" />
     <ClInclude Include="lua\lapi.h" />
     <ClInclude Include="lua\lauxlib.h" />
     <ClInclude Include="lua\lcode.h" />

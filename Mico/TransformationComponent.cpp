@@ -59,9 +59,17 @@ quat TransformationComponent::GetOrientation()
 	return Orientation;
 }
 
-void TransformationComponent::SetOrientatio(quat orientation)
+void TransformationComponent::SetOrientation(quat orientation)
 {
 	Orientation = orientation;
+}
+
+void TransformationComponent::Rotate(float angle)
+{
+}
+
+void TransformationComponent::Rotate(float angle, vec3 axis)
+{
 }
 
 

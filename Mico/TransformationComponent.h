@@ -19,7 +19,10 @@ public:
 	void SetScale(vec3 scale);
 
 	quat GetOrientation();
-	void SetOrientatio(quat orientation);
+	void SetOrientation(quat orientation);
+
+	void Rotate(float angle);
+	void Rotate(float angle, vec3 axis);
 
 	virtual void Initialize(Entity* owner);
 	virtual void ShutDown();
