@@ -199,6 +199,7 @@
     <ClCompile Include="Material.cpp" />
     <ClCompile Include="Math.cpp" />
     <ClCompile Include="Mico.cpp" />
+    <ClCompile Include="ScriptComponent.cpp" />
     <ClCompile Include="SelectableBoundingVolumen.cpp" />
     <ClCompile Include="ShadowObject.cpp" />
     <ClCompile Include="Terrain.cpp" />
@@ -262,6 +263,7 @@
     <ClInclude Include="Math.h" />
     <ClInclude Include="Mico.h" />
     <ClInclude Include="Observable.h" />
+    <ClInclude Include="ScriptComponent.h" />
     <ClInclude Include="SelectableBoundingVolumen.h" />
     <ClInclude Include="ShadowObject.h" />
     <ClInclude Include="stb_rect_pack.h" />

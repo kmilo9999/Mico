@@ -1,6 +1,6 @@
 #include "Mico.h"
 #include <vector>
-
+#include <assert.h>
 
 Mico* Mico::Instance(0);
 
@@ -19,8 +19,7 @@ Mico::Mico():running(true),previous(0.0),steps(0.0)
 
 Mico::~Mico()
 {
-
-	
+	lua_close(L);
 }
 
 Mico * Mico::GetInstance()
@@ -46,15 +45,21 @@ void Mico::Initialize()
 	uiSystem->addObserver(graphicsSystem);
 	uiSystem->addObserver(EntityManager::GetInstance());
 	
+   //Lua (For now, it must be changed to some kind of system or components)
+   // Init Lua
+	L = luaL_newstate();
+	luaopen_base(L);
+	luaopen_table(L);
+	luaopen_io(L);
+	luaopen_string(L);
+	luaopen_math(L);
+	luaopen_debug(L);
 
-	//vector<Entity*> targets;
-	//Entity* target = new Entity();
-	//target->SetPosition(vec3(0.0f, 0.0f, 0.0f));
-	//target->SetScale(vec3(1.0f, 1.0f, 1.0f));
-	//targets.push_back(target);
-	//entities.insert(std::pair <TexturedModel*, vector<Entity*>>(myModel, targets));
 
+	luaL_dofile(L, "scripts/middle_entity.lua");
+	
 }
+
 
 /*
 	Run the Game Loop where updates all the componentes of the scene
@@ -94,6 +99,7 @@ void Mico::Run()
 	}
 
 	uiSystem->ImGuiShutdown();
+	
 }
 
 

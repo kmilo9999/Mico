@@ -11,6 +11,7 @@
 #include "Material.h"
 #include "EntityManager.h"
 #include "UISystem.h"
+#include "lua/lua.hpp"
 
 using namespace std;
 class Mico
@@ -33,6 +34,7 @@ private:
 	WindowSystem* windowSystem;
 	GraphicsSystem* graphicsSystem;
 	UISystem* uiSystem;
+	lua_State *L;
 	
 };
 
