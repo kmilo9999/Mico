@@ -57,7 +57,7 @@ void main(){
    float texCoordZ = lightIntensity ;
 
    // sample 3D texture to get hatching intensity
-   vec3 hatching = texture(textureArray, vec3(texCoordXY,texCoordZ )).rgb;
+   vec3 hatching = texture(textureArray, vec3(texCoordXY,texCoordZ)).rgb;
 
    //modulate hatching with lighting (not required)
 	color.rgb = hatching * (1.0 + lightIntensity * 2)/3;

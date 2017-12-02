@@ -8,7 +8,7 @@ using namespace glm;
 class GlobalLight:public Entity
 {
 public:
-	GlobalLight(vec3 color = vec3(1.0f,1.0f,1.0f), double ambient = 1.0f);
+	GlobalLight(vec3 color = vec3(0.4f , 0.2f , 0.0f), double ambient = 1.0f);
 	~GlobalLight();
 
 

@@ -73,9 +73,14 @@ void main(){
 	 // use base color
 	 color = vec4(objectColor*shadeIntensity, 1.0); 
   }
-  else
+  else if(VertexOut.edgeFlag == 1)
   {
 	 color = vec4(0.0,0.0,0.0,1.0);
   }
+  else
+  {
+     color = vec4(1.0,0.0,0.0,1.0);
+  }
+
   
 }

@@ -1,6 +1,6 @@
 #version 430 core
 layout(triangles_adjacency) in;
-layout(triangles, max_vertices = 3) out;
+layout(triangle_strip, max_vertices = 3) out;
 
 // constant values for the whole mesh.
 uniform mat4 ModelMatrix;
@@ -8,10 +8,18 @@ uniform mat4 ViewMatrix;
 uniform mat4 ProjectionMatrix;
 uniform vec3 lightPos;
 
+struct Light {
+    vec3 position;
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+};
+
+uniform Light light;
+
 in VertexData
 {
     vec3 normal;
-	vec3 fragpos;
 	vec2 textCoord;
 } vertex[];
 
@@ -19,68 +27,276 @@ out FragmentVertexData
 {
     vec3 normal;
 	vec3 fragpos;
-	vec2 textCoord;
-} vertexOut;
+	vec2 textCoordC;
+	vec2 textCoordA;
+	vec2 textCoordB;
+	vec2 textCoordG;
+	vec3 normalC;
+	vec3 normalA;
+	vec3 normalB;
+	vec3 normalG;
+	float blendC;
+	float blendA;
+	float blendB;
+	float blendG;
+} VertexOut;
  
- in vec2 TextCoord;
+
+ struct Vertex
+ {
+    vec3 vertex;
+	int index;
+	vec2 textCoord;
+	float bFactor;
+	vec3 normal;
+ };
+
+struct Triangle
+{
+  Vertex[3] vertices;
+  int id;
+  vec3 normal;
+  vec3 prjLight;
+  vec3 opositeToC;
+};
+
+
+Triangle triangles[4];
+
+
+bool belongToTriangleC(int index, Triangle triangle, Triangle triangleC)
+{
+  int currentTriangleIndex = triangle.vertices[index].index;
+  for(int i = 0 ; i < 3 ; ++i)
+  {
+    if(triangleC.vertices[i].index == currentTriangleIndex)
+	{
+	   return true;
+	}
+  }
+  return false;
+}
+
+vec3 projectedVertexIntriangle(int index, Triangle processingT,Triangle adjancentC)
+{
+
+	// projection of a point on a plane
+	vec3 firstLine = processingT.vertices[1].vertex - processingT.vertices[0].vertex;
+	vec3 secondLine = processingT.vertices[2].vertex - processingT.vertices[0].vertex;
+
+	vec3 normalToPlane =  cross(firstLine, secondLine);
+
+
+	//find common
+	vec3 comon = vec3(0);
+	int foundCommon = 0;
+	for(int i = 0 ; i < 3 ; ++i)
+	{
+	  for(int j = 0 ; j < 3 ; ++j)
+	  {
+	    if(processingT.vertices[i].index == adjancentC.vertices[j].index )
+		{
+		  comon = adjancentC.vertices[j].vertex;
+		  foundCommon = 1;
+		  break;
+		}
+	  }
+	  if(foundCommon ==1 )
+	  {
+	    break;
+	  }
+	}
+
+	vec3 toPointOnAPlane =  processingT.opositeToC - comon;
+	float normalength = length(normalToPlane);
+	vec3 projected =  ( (dot(toPointOnAPlane,normalToPlane) )/ (normalength * normalength)) * normalToPlane;
+	vec3 vPrime = processingT.opositeToC - projected;
+
+	return vPrime;
+}
+
+vec2 generateTextCoord(vec3 v, Triangle triangle)
+{
+    vec3 B = normalize(triangle.prjLight - (triangle.normal * dot(triangle.prjLight,triangle.normal)));
+	vec3 T = cross(B, triangle.normal);
+	
+	vec2 textCoord = vec2(0);
+	textCoord.s = dot(v,T);
+	textCoord.t = dot(v,B);
+	
+
+	return textCoord;
+}
+
 
 void main(){
 
-  vec3 P0 = gl_in[0].gl_Position.xyz;
-  vec3 P1 = gl_in[2].gl_Position.xyz;
-  vec3 P2 = gl_in[4].gl_Position.xyz;
+  Triangle t0;
+  t0.vertices[0].vertex = vec3(ModelMatrix * gl_in[0].gl_Position);
+  t0.vertices[0].normal =  mat3(transpose(inverse(ModelMatrix))) * vertex[0].normal;
+  t0.vertices[0].index = 0;
+  t0.vertices[1].vertex = vec3(ModelMatrix * gl_in[2].gl_Position);
+  t0.vertices[1].normal =  mat3(transpose(inverse(ModelMatrix))) * vertex[2].normal;
+  t0.vertices[1].index = 2;
+  t0.vertices[2].vertex = vec3(ModelMatrix * gl_in[1].gl_Position);
+  t0.vertices[2].normal =  mat3(transpose(inverse(ModelMatrix))) * vertex[1].normal;
+  t0.vertices[2].index = 1;
+  t0.id = 0;
 
-  /*vec3 V0 = P1 - P0;
-  vec3 V1 = P2 - P0;
-  vec3 N = cross(V0, V1);
-  N  =  normalize(N);*/
-  
+  triangles[0] = t0;
 
-  gl_Position = ProjectionMatrix * ViewMatrix * vec4(P0,1);
-  VertexOut.normal = vertex[0].normal;
-  VertexOut.fragpos = vertex[0].fragpos;
-  VertexOut.texCoord = vertex[0].textCoord;
-  EmitVertex();
+  Triangle t1;
+  t1.vertices[0].vertex = vec3(ModelMatrix * gl_in[3].gl_Position);
+  t1.vertices[0].index = 3;
+  t1.vertices[0].normal =  mat3(transpose(inverse(ModelMatrix))) * vertex[3].normal;
+  t1.vertices[1].vertex = vec3(ModelMatrix * gl_in[2].gl_Position);
+  t1.vertices[1].index = 2;
+  t1.vertices[1].normal =  mat3(transpose(inverse(ModelMatrix))) * vertex[2].normal;
+  t1.vertices[2].vertex = vec3(ModelMatrix * gl_in[4].gl_Position);
+  t1.vertices[2].index = 4;
+  t1.vertices[2].normal =  mat3(transpose(inverse(ModelMatrix))) * vertex[4].normal;
+  t1.id = 1;
 
-  // position was already multiplied by the model matrix in the vertex shader
-  gl_Position = ProjectionMatrix * ViewMatrix *  vec4(P1,1);
-  VertexOut.normal = vertex[2].normal;
-  VertexOut.fragpos = vertex[2].fragpos;
-  VertexOut.texCoord = vertex[2].textCoord;
-  EmitVertex();
+  triangles[1] = t1;
 
-  gl_Position = ProjectionMatrix * ViewMatrix * vec4(P2,1);
-  VertexOut.normal = vertex[4].normal;
-  VertexOut.fragpos = vertex[4].fragpos;
-  VertexOut.texCoord = vertex[4].textCoord;
-  EmitVertex();
+  Triangle t2;
+  t2.vertices[0].vertex = vec3(ModelMatrix * gl_in[0].gl_Position);
+  t2.vertices[0].index = 0;
+  t2.vertices[0].normal =  mat3(transpose(inverse(ModelMatrix))) * vertex[0].normal;
+  t2.vertices[1].vertex = vec3(ModelMatrix * gl_in[2].gl_Position);
+  t2.vertices[1].index = 2;
+  t2.vertices[1].normal =  mat3(transpose(inverse(ModelMatrix))) * vertex[2].normal;
+  t2.vertices[2].vertex = vec3(ModelMatrix * gl_in[4].gl_Position);
+  t2.vertices[2].index = 4;
+  t2.vertices[2].normal =  mat3(transpose(inverse(ModelMatrix))) * vertex[4].normal;
+  t2.id = 2;
 
-  EndPrimitive();
+  triangles[2] = t2;
 
-  
+  Triangle t3;
+  t3.vertices[0].vertex = vec3(ModelMatrix * gl_in[0].gl_Position);
+  t3.vertices[0].index = 0;
+  t3.vertices[0].normal =  mat3(transpose(inverse(ModelMatrix))) * vertex[0].normal;
+  t3.vertices[1].vertex = vec3(ModelMatrix * gl_in[5].gl_Position);
+  t3.vertices[1].index = 5;
+  t3.vertices[1].normal =  mat3(transpose(inverse(ModelMatrix))) * vertex[5].normal;
+  t3.vertices[2].vertex = vec3(ModelMatrix * gl_in[4].gl_Position);
+  t3.vertices[2].index = 4;
+  t3.vertices[2].normal =  mat3(transpose(inverse(ModelMatrix))) * vertex[4].normal;
+  t3.id = 3;
 
- /* N = ;
-  
-  // Center of the triangle
-  vec3 P = (P0+P1+P2) / 3.0;
-  vec3 L = lightPos - P;
+  triangles[3] = t3;
 
-  float dotLN = dot(L,N);
-  vec3  B  = normalize(L - N * dotLN  );
-  vec3  T  = cross(B,N);
+  // set oposite vertices
+  triangles[0].opositeToC = triangles[2].vertices[2].vertex;
+  triangles[1].opositeToC = triangles[2].vertices[0].vertex;
+  triangles[3].opositeToC = triangles[2].vertices[1].vertex;
 
-  
-  for(int i = 0; i < gl_in.length(); i++)
+  //compute normal of triangles and projected light
+  for(int i = 0; i < 4; i++)
   {
-    
-	vec4 position = ProjectionMatrix * ViewMatrix * ModelMatrix  * gl_in[i].gl_Position;
-    gl_Position = position;
-    VertexOut.texCoord.s =  max(0,dot(gl_in[i].gl_Position.xyz, T));
-	VertexOut.texCoord.t = max(0,dot(gl_in[i].gl_Position.xyz, B));
+      vec3 P0 = triangles[i].vertices[0].vertex;
+	  vec3 P1 = triangles[i].vertices[1].vertex;
+	  vec3 P2 = triangles[i].vertices[2].vertex;
+
+	  vec3 V0 = P1 - P0;
+	  vec3 V1 = P2 - P0;
+	  vec3 N = normalize(cross(V0, V1));
+  
+  
+	  // Center of the triangle
+	  vec3 P = (P0+P1+P2) / 3.0;
+	  vec3 L = light.position - P;
+
+	  triangles[i].normal = mat3(transpose(inverse(ModelMatrix))) *  N;
+	  triangles[i].prjLight = L;
+	  
+  }
+
+  for(int i = 0; i < 3; ++i)
+  {
+     for(int j = 0; j < 4; ++j)
+	 {
+	   // main triagle
+	   if(triangles[j].id == 2)
+	   {
+	    vec3 B = normalize(triangles[j].prjLight - (triangles[j].normal * dot(triangles[j].prjLight,triangles[j].normal)));
+		vec3 T = cross(B, triangles[j].normal);
+	
+		//vec2 textCoord(, dot(v,B));
+		
+	
+
+		//return textCoord;
+	    //vec2 textCoord = generateTextCoord(triangles[j].vertices[i].vertex, triangles[j]);
+
+		triangles[j].vertices[i].textCoord.s = dot(triangles[j].vertices[i].vertex,T);
+		triangles[j].vertices[i].textCoord.t = dot(triangles[j].vertices[i].vertex,B);
+		triangles[j].vertices[i].bFactor = 1.0;
+			 
+		   
+	   }
+	   // vertex not in triangle
+	   else if(triangles[j].vertices[i].index % 2 != 0)
+	   {
+	     vec3 vPrime = projectedVertexIntriangle(i, triangles[j],triangles[2]);
+		 //vec2 textCoord = generateTextCoord(vPrime, triangles[j]);
+		 
+		 vec3 B = normalize(triangles[j].prjLight - (triangles[j].normal * dot(triangles[j].prjLight,triangles[j].normal)));
+		 vec3 T = cross(B, triangles[j].normal);
+
+		 triangles[j].vertices[i].textCoord.s = dot(vPrime,T);
+		 triangles[j].vertices[i].textCoord.t = dot(vPrime,B);
+		 triangles[j].vertices[i].bFactor = -1;
+	   }
+	   // it belongs to the triangle
+	   else
+	   {
+	     //vec2 textCoord = generateTextCoord(triangles[j].vertices[i].vertex, triangles[j]);
+
+		 vec3 B = normalize(triangles[j].prjLight - (triangles[j].normal * dot(triangles[j].prjLight,triangles[j].normal)));
+		 vec3 T = cross(B, triangles[j].normal);
+
+
+		 triangles[j].vertices[i].textCoord.s = dot(triangles[j].vertices[i].vertex,T);
+		 triangles[j].vertices[i].textCoord.t = dot(triangles[j].vertices[i].vertex,B);
+		 triangles[j].vertices[i].bFactor = dot( triangles[2].normal,triangles[j].normal);
+	   }
+	 }
+  }
+
+       for(int i = 0 ; i < 6 ; i+=2 )
+	   {
+	    
+        vec4 fragPos      = ModelMatrix * gl_in[i].gl_Position;
+
+		int vertexIndex = i/2;
+
+        VertexOut.normal  = mat3(transpose(inverse(ModelMatrix))) * vertex[i].normal;
+        VertexOut.fragpos = fragPos.xyz;
+
+		VertexOut.textCoordC = vec2(triangles[2].vertices[vertexIndex].textCoord.s,triangles[2].vertices[vertexIndex].textCoord.t);
+		VertexOut.textCoordA = vec2(triangles[0].vertices[vertexIndex].textCoord.s,triangles[0].vertices[vertexIndex].textCoord.t);
+		VertexOut.textCoordB = vec2(triangles[1].vertices[vertexIndex].textCoord.s,triangles[1].vertices[vertexIndex].textCoord.t);
+		VertexOut.textCoordG = vec2(triangles[3].vertices[vertexIndex].textCoord.s,triangles[3].vertices[vertexIndex].textCoord.t);
+
+		VertexOut.normalC = VertexOut.normal;
+	    VertexOut.normalA = triangles[0].vertices[vertexIndex].normal;
+	    VertexOut.normalB = triangles[1].vertices[vertexIndex].normal;
+	    VertexOut.normalG = triangles[3].vertices[vertexIndex].normal;
+
+		VertexOut.blendC = triangles[2].vertices[vertexIndex].bFactor;
+		VertexOut.blendA = triangles[0].vertices[vertexIndex].bFactor;
+		VertexOut.blendB = triangles[1].vertices[vertexIndex].bFactor;
+		VertexOut.blendG = triangles[3].vertices[vertexIndex].bFactor;
+				
+        gl_Position       = ProjectionMatrix * ViewMatrix * fragPos;
+        EmitVertex();
+
+	   }
+       
  
-    // done with the vertex
-    EmitVertex();
-  }*/
+      EndPrimitive();
 
 
 }

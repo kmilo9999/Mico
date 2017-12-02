@@ -24,14 +24,6 @@ out FragmentVertexData
 
 void main(){
 
-  vec3 P0 = gl_in[0].gl_Position.xyz;
-  vec3 P1 = gl_in[2].gl_Position.xyz;
-  vec3 P2 = gl_in[4].gl_Position.xyz;
-
-  vec3 V0 = P1 - P0;
-  vec3 V1 = P2 - P0;
-  vec3 N = cross(V0, V1);
-  N  =  normalize(N);
   
 
   for (int i = 0; i < 6; i += 2)

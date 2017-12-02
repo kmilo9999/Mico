@@ -5,6 +5,7 @@
 #include "TransformationComponent.h"
 #include "GraphicsComponent.h"
 #include <iostream>
+#include <glm/gtx/quaternion.hpp>
 
 EntityManager* EntityManager::instance(0);
 
@@ -155,11 +156,18 @@ void EntityManager::Initialize()
 	
 	//Initialize center model
 	//CreateEntity("bunny", vec3(0.0f, 11.0f, 3.0f), quat(), vec3(1.0f, 1.0f, 1.0f), GL_TRIANGLES);
-	//CreateEntity("teapot", vec3(0.0f, 11.0f, 3.0f), quat(), vec3(1.0f, 1.0f, 1.0f), GL_TRIANGLES_ADJACENCY);
+	CreateEntity("teapot", vec3(0.0f, 11.0f, 3.0f), quat(), vec3(1.0f, 1.0f, 1.0f), GL_TRIANGLES_ADJACENCY);
+	myCenterModelId = "teapot";
+
+	//CreateEntity("new_sphere", vec3(3.0f, 12.0f, 3.0f), quat(), vec3(1.0f, 1.0f, 1.0f), GL_TRIANGLES_ADJACENCY);
+
+	
+
+	//CreateEntity("plane_subdivided2", vec3(3.0f, 11.0f, 3.0f), quat(), vec3(10.0f, 1.0f, 10.0f), GL_TRIANGLES_ADJACENCY);
 	//myCenterModelId = "teapot";
 
-	CreateEntity("bunny", vec3(0.0f, 11.0f, 3.0f), quat(), vec3(1.0f, 1.0f, 1.0f), GL_TRIANGLES_ADJACENCY);
-	myCenterModelId = "bunny";
+	//CreateEntity("bunny", vec3(0.0f, 11.0f, 3.0f), quat(), vec3(1.0f, 1.0f, 1.0f), GL_TRIANGLES_ADJACENCY);
+	//myCenterModelId = "bunny";
 
 
 
