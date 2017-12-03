@@ -21,16 +21,16 @@ public:
 	quat GetOrientation();
 	void SetOrientation(quat orientation);
 
-	void Rotate(float angle);
-	void Rotate(float angle, vec3 axis);
+	void Rotate(quat rotation);
 
 	virtual void Initialize(Entity* owner);
 	virtual void ShutDown();
 
 private:
-	vec3 Position;
-	quat Orientation;
-	vec3 Scale;
+	vec3 myPosition;
+	quat myOrientation;
+	vec3 myOrientationAxis;
+	vec3 myScale;
 
 
 };

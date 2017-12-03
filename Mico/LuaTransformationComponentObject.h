@@ -22,9 +22,9 @@ public:
 	int SetScale(lua_State *Lua);
 
 	int GetOrientation(lua_State *Lua);
-	int SetOrientatio(lua_State *Lua);
+	int SetOrientation(lua_State *Lua);
 
-	int rotate(float angle, vec3 axis);
+	int rotate(lua_State * Lua);
 
 
 private:

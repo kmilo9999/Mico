@@ -63,11 +63,24 @@ int LuaTransformationComponentObject::GetOrientation(lua_State * Lua)
 	return 1;
 }
 
-int LuaTransformationComponentObject::SetOrientatio(lua_State * Lua)
+int LuaTransformationComponentObject::SetOrientation(lua_State * Lua)
 {
 	vec3 eulerAngles((float)luaL_checknumber(Lua, 1), (float)luaL_checknumber(Lua, 2),
 		(float)luaL_checknumber(Lua, 3));
 
 	myTransformation->SetOrientation(Math::fromEulerAngles(eulerAngles));
     return 0;
+}
+
+int LuaTransformationComponentObject::rotate(lua_State * Lua)
+{
+	float angle = (float)luaL_checknumber(Lua, 1);
+	float xAxis = (float)luaL_checknumber(Lua, 2);
+	float yAxis = (float)luaL_checknumber(Lua, 3);
+	float zAxis = (float)luaL_checknumber(Lua, 3);
+	
+	quat rotation(angle, vec3(xAxis, yAxis, zAxis));
+	myTransformation->Rotate(rotation);
+
+	return 0;
 }

@@ -154,7 +154,7 @@
     <ClCompile Include="BoundingVolumen.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Entity.cpp" />
-    <ClCompile Include="EntityLuaObject.cpp" />
+    <ClCompile Include="LuaEntityObject.cpp" />
     <ClCompile Include="EntityManager.cpp" />
     <ClCompile Include="FBO.cpp" />
     <ClCompile Include="GLError.cpp" />
@@ -202,6 +202,7 @@
     <ClCompile Include="Math.cpp" />
     <ClCompile Include="Mico.cpp" />
     <ClCompile Include="ScriptComponent.cpp" />
+    <ClCompile Include="ScriptSystem.cpp" />
     <ClCompile Include="SelectableBoundingVolumen.cpp" />
     <ClCompile Include="ShadowObject.cpp" />
     <ClCompile Include="Terrain.cpp" />
@@ -226,7 +227,8 @@
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Component.h" />
     <ClInclude Include="Entity.h" />
-    <ClInclude Include="EntityLuaObject.h" />
+    <ClInclude Include="LuaCommon.h" />
+    <ClInclude Include="LuaEntityObject.h" />
     <ClInclude Include="EntityManager.h" />
     <ClInclude Include="FBO.h" />
     <ClInclude Include="GLError.h" />
@@ -268,6 +270,7 @@
     <ClInclude Include="Mico.h" />
     <ClInclude Include="Observable.h" />
     <ClInclude Include="ScriptComponent.h" />
+    <ClInclude Include="ScriptSystem.h" />
     <ClInclude Include="SelectableBoundingVolumen.h" />
     <ClInclude Include="ShadowObject.h" />
     <ClInclude Include="stb_rect_pack.h" />

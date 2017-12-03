@@ -19,7 +19,7 @@ Mico::Mico():running(true),previous(0.0),steps(0.0)
 
 Mico::~Mico()
 {
-	lua_close(L);
+
 }
 
 Mico * Mico::GetInstance()
@@ -38,25 +38,13 @@ void Mico::Initialize()
 
 	graphicsSystem->Init();
 	uiSystem->Init();
+	//scriptSystem->Init();
 
 	WindowHandler::GetInstance()->addObserver(graphicsSystem);
 	EntityManager::GetInstance()->Initialize();
 	graphicsSystem->InitScene();
 	uiSystem->addObserver(graphicsSystem);
 	uiSystem->addObserver(EntityManager::GetInstance());
-	
-   //Lua (For now, it must be changed to some kind of system or components)
-   // Init Lua
-	L = luaL_newstate();
-	luaopen_base(L);
-	luaopen_table(L);
-	luaopen_io(L);
-	luaopen_string(L);
-	luaopen_math(L);
-	luaopen_debug(L);
-
-
-	luaL_dofile(L, "scripts/middle_entity.lua");
 	
 }
 

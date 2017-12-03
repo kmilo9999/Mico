@@ -4,6 +4,7 @@
 #include "TexturedModel.h"
 #include "GraphicsSystem.h"
 #include "WindowSystem.h"
+#include "ScriptSystem.h"
 #include "WindowHandler.h"
 #include "Loader.h"
 #include "GlobalLight.h"
@@ -11,7 +12,7 @@
 #include "Material.h"
 #include "EntityManager.h"
 #include "UISystem.h"
-#include "lua/lua.hpp"
+
 
 using namespace std;
 class Mico
@@ -23,6 +24,8 @@ public:
 
 	~Mico();
 
+
+
 private:
 	
 	Mico();
@@ -33,8 +36,9 @@ private:
 	double steps;
 	WindowSystem* windowSystem;
 	GraphicsSystem* graphicsSystem;
+	//ScriptSystem* scriptSystem;
 	UISystem* uiSystem;
-	lua_State *L;
+	
 	
 };
 

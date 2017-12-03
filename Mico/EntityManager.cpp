@@ -4,6 +4,8 @@
 #include "Event.h"
 #include "TransformationComponent.h"
 #include "GraphicsComponent.h"
+#include "ScriptComponent.h"
+#include "ScriptSystem.h"
 #include <iostream>
 #include <glm/gtx/quaternion.hpp>
 
@@ -221,6 +223,10 @@ void EntityManager::CreateEntity(string modelId, vec3 postion, quat orientation,
 	//material->AddTexture(targetTtexture);
 	GraphicsComponent* graphics = new GraphicsComponent(GetModelByNameAndMode(modelId,mode), material);
 	myCenterEntity->AddComponent(graphics);
+
+	//ScriptComponent* script = new ScriptComponent(SCRIPTSYSTEM->luaState());
+	//script->setScriptName(modelId);
+ //   myCenterEntity->AddComponent(script);
 
     SelectableBoundingVolumen* boundingVolumen = new BoundingSphere(0.7f);
 	boundingVolumen->SetModel(GetModelByName("sphere"));

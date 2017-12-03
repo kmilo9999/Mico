@@ -1,12 +1,12 @@
 #include "TransformationComponent.h"
-
+#include "Math.h"
 
 
 TransformationComponent::TransformationComponent(vec3 position, 
 	quat orientation, vec3 scale)
-	: Position(position)
-	, Orientation(orientation)
-	, Scale(scale)
+	: myPosition(position)
+	, myOrientation(orientation)
+	, myScale(scale)
 {
 	ComponentName = "TransformationComponent";
 }
@@ -32,12 +32,12 @@ void TransformationComponent::Update()
 
 vec3 TransformationComponent::GetPosition()
 {
-	return Position;
+	return myPosition;
 }
 
 void TransformationComponent::SetPosition(vec3 position)
 {
-	Position = position;
+	myPosition = position;
 	/*if (boundingVolumen)
 	{
 		boundingVolumen->SetPotision(Position);
@@ -46,30 +46,27 @@ void TransformationComponent::SetPosition(vec3 position)
 
 vec3 TransformationComponent::GetScale()
 {
-	return Scale;
+	return myScale;
 }
 
 void TransformationComponent::SetScale(vec3 scale)
 {
-	Scale = scale;
+	myScale = scale;
 }
 
 quat TransformationComponent::GetOrientation()
 {
-	return Orientation;
+	return myOrientation;
 }
 
 void TransformationComponent::SetOrientation(quat orientation)
 {
-	Orientation = orientation;
+	myOrientation = orientation;
 }
 
-void TransformationComponent::Rotate(float angle)
+void TransformationComponent::Rotate(quat rotation)
 {
-}
-
-void TransformationComponent::Rotate(float angle, vec3 axis)
-{
+	myOrientation = myOrientation * rotation;
 }
 
 

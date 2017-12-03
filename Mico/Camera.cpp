@@ -134,7 +134,7 @@ void Camera::onNotify(Event& evt)
 
 			float xAngle = (evt.mouseMove.x - lastMousePosition.x)*mouseSpeed;
 			float yAngle = (evt.mouseMove.y - lastMousePosition.y)*mouseSpeed;
-			RotateX(yAngle); // invert the angle because to feel it more natural
+			RotateX(yAngle); // invert the angle to feel it more natural
 			RotateY(-xAngle);
 			lastMousePosition.x = evt.mouseMove.x;
 			lastMousePosition.y = evt.mouseMove.y;

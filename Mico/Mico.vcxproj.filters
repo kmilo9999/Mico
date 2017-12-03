@@ -225,10 +225,13 @@
     <ClCompile Include="ScriptComponent.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="EntityLuaObject.cpp">
+    <ClCompile Include="LuaTransformationComponentObject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="LuaTransformationComponentObject.cpp">
+    <ClCompile Include="LuaEntityObject.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ScriptSystem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -434,10 +437,16 @@
     <ClInclude Include="ScriptComponent.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="EntityLuaObject.h">
+    <ClInclude Include="LuaTransformationComponentObject.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="LuaTransformationComponentObject.h">
+    <ClInclude Include="LuaEntityObject.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ScriptSystem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LuaCommon.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
