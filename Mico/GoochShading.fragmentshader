@@ -73,6 +73,6 @@ void main(){
   float spec = pow(max(dot(viewDir, reflectDir), 0.0), 120);
   vec3 ks = spec * specularColor ; 
 
-  color = vec4(kd, 1.0); 
+  color = vec4(kd , 1.0); 
   
 }

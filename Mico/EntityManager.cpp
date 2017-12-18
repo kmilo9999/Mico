@@ -8,6 +8,7 @@
 #include "ScriptSystem.h"
 #include <iostream>
 #include <glm/gtx/quaternion.hpp>
+#include "Math.h"
 
 EntityManager* EntityManager::instance(0);
 
@@ -55,6 +56,7 @@ vector<vec2> textcoor{
 
 EntityManager::EntityManager()
 	: myCurrentCenterModel(MODEL::Bunny)
+	, currentAngle(0.0f)
 {
 
 }
@@ -93,7 +95,7 @@ TexturedModel * EntityManager::GetModelByName(string modelId)
 	}
 	else
 	{
-		return GetModel(modelId, GL_TRIANGLES);
+		return GetModel(modelId, GL_TRIANGLES_ADJACENCY);
 	}
 	
 }
@@ -153,12 +155,29 @@ void EntityManager::ReplaceCenterModel(string modelId)
 	graphicsComponent->SetTexturedModel(replaceModel);
 }
 
+
+void EntityManager::UpdateCenterModel(float dt)
+{
+	TransformationComponent* transformation = dynamic_cast<TransformationComponent*>(myCenterEntity->GetComponent("TransformationComponent"));
+	
+	// this logic should be moved to the script component
+	currentAngle = 0.0f;//00005f;
+	
+	//quat q(currentAngle, vec3(0, 1, 0));
+	vec3 up(0, 1, 0);
+
+	quat q = Math::angleAxis(currentAngle, up);
+	//transformation->SetOrientation(q);
+	transformation->Rotate(q);
+	
+}
+
 void EntityManager::Initialize()
 {
 	
 	//Initialize center model
 	//CreateEntity("bunny", vec3(0.0f, 11.0f, 3.0f), quat(), vec3(1.0f, 1.0f, 1.0f), GL_TRIANGLES);
-	CreateEntity("teapot", vec3(0.0f, 11.0f, 3.0f), quat(), vec3(1.0f, 1.0f, 1.0f), GL_TRIANGLES_ADJACENCY);
+	CreateEntity("bunny", vec3(0.0f, 11.0f, 3.0f), quat(), vec3(1.0f, 1.0f, 1.0f), GL_TRIANGLES_ADJACENCY);
 	myCenterModelId = "teapot";
 
 	//CreateEntity("new_sphere", vec3(3.0f, 12.0f, 3.0f), quat(), vec3(1.0f, 1.0f, 1.0f), GL_TRIANGLES_ADJACENCY);
@@ -410,3 +429,4 @@ void EntityManager::onNotify(Event & event)
 			break;
 	}
 }
+

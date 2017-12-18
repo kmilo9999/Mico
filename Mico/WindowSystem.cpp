@@ -45,7 +45,7 @@ void WindowSystem::Init()
 	WINDOWSYSTEM = this;
 }
 
-void WindowSystem::Update()
+void WindowSystem::Update(float dt)
 {
 }
 

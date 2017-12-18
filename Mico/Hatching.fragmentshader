@@ -41,7 +41,7 @@ void main(){
 
   vec3 viewDir = normalize(ViewPos - FragPos);
   vec3 halfwayDir = normalize(lightDir + viewDir );
-  float spec = pow(max(dot(normal, halfwayDir), 0.0), material.shininess);
+  float spec = pow(max(dot(normal, halfwayDir), 64.0f), material.shininess);
   
 
   float lightIntensity = clamp(0.025 + diff + spec ,0,1);

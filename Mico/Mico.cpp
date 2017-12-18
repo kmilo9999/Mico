@@ -1,10 +1,12 @@
 #include "Mico.h"
 #include <vector>
 #include <assert.h>
+#include <algorithm>
 
 Mico* Mico::Instance(0);
 
-double secsPerFrame = 1 / 60;
+const float secsPerFrame = 1000/60;
+const float maxSteps = 1.0f;
 
 
 
@@ -58,19 +60,32 @@ void Mico::Run()
 	glfwSwapInterval(1);
 	previous = glfwGetTime();
 	double lag = 0;
+	double previous = glfwGetTime();
 	while (running)
 	{
-		double current = glfwGetTime();
-		double elapsed = current - previous;
-		previous = current;
-		steps += elapsed;
+		float newTicks = glfwGetTime();
+		float elapsed = newTicks - previous;
+		previous = newTicks;
+		float deltaTime = elapsed / secsPerFrame;
+
+
+
+		
+		while (deltaTime > 0.0f){	
+			float dt = std::min(deltaTime, maxSteps);
+			EntityManager::GetInstance()->UpdateCenterModel(deltaTime);
+			deltaTime -= dt;
+		
+		}
 
 		EntityManager::GetInstance()->UpdateEntities();
+		
+	
 
-		graphicsSystem->Update();
+		graphicsSystem->Update(elapsed);
 
 		uiSystem->ImGuiNewFrame();
-		uiSystem->Update();
+		uiSystem->Update(elapsed);
 
 		graphicsSystem->FinishRender();
 		//while (lag >= secsPerFrame)

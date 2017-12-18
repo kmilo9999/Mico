@@ -14,7 +14,7 @@ public:
 	WindowSystem(int width, int height);
 	~WindowSystem();
 	virtual void Init();
-	virtual void Update();
+	virtual void Update(float dt);
 	virtual std::string className();
 	GLFWwindow* GetWindow();
 	GLuint GetWidth();

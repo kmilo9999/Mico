@@ -19,7 +19,7 @@ public:
 	~GraphicsSystem();
 
 	virtual void Init();
-	virtual void Update();
+	virtual void Update(float dt);
 	virtual std::string className();
 	virtual void onNotify(Event& event);
 
@@ -81,6 +81,7 @@ private:
 	bool hasSelectedEntity;
 	vec2 lastMousePosition;
 	bool showNormals;
+	bool showModel;
 	
 	/*render to quad*/
 	unsigned int VAO;

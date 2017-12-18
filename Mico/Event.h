@@ -26,7 +26,8 @@ class Event {
 		   GoochColdColor,
 		   GoochAlpha,
 		   GoochBeta,
-		   CelBrightLevel
+		   CelBrightLevel,
+		   ShowModel
 	   };
 
 	   Event(EventType type) :type(type) {};

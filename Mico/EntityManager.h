@@ -42,6 +42,8 @@ public:
 
 	virtual void onNotify(Event& event);
 
+	void UpdateCenterModel(float dt);
+
 	~EntityManager();
 
 private:
@@ -60,5 +62,8 @@ private:
 	MODEL myCurrentCenterModel;
 	string myCenterModelId;
 	Entity* myCenterEntity;
+
+	//this logic that must be in the script component
+	float currentAngle;
 };
 

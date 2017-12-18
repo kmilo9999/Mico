@@ -27,10 +27,13 @@ GraphicsComponent::~GraphicsComponent()
 
 void GraphicsComponent::Update()
 {
-	myModelMatrix = Math::CreateTransformationMatrix(
+	mat4 m = Math::CreateTransformationMatrix(
 		transformation->GetPosition(),
-		transformation->GetOrientation(), 
+		transformation->GetOrientation(),
 		transformation->GetScale());
+	myModelMatrix = m;
+
+
 }
 
 void GraphicsComponent::Initialize(Entity* owner)

@@ -16,12 +16,13 @@ public:
 	UISystem();
 	~UISystem();
 	virtual void Init();
-	virtual void Update();
+	virtual void Update(float dt);
 	virtual std::string className();
 	void ImGuiNewFrame();
 	void ImGuiShutdown();
 private:
 	bool showNormals = false;
+	bool showModel = true;
 };
 /// Global pointer to the Graphics System.
 extern UISystem * UISYSTEM;

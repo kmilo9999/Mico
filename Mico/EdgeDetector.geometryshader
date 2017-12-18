@@ -10,7 +10,9 @@ uniform mat4 ModelMatrix;
 uniform vec3 ViewPos;
 uniform mat4 ViewInverse;
 
-float edgeLenght = 0.1;
+uniform int showModel;
+
+float edgeLenght = 0.01;
 
 in VertexData
 {
@@ -79,28 +81,28 @@ void main(){
 
 			  // extra triangles to complete the geometry
 			  
-			  vec2 s0 = vec2(ProjectionMatrix * ViewMatrix * vec4(V1,1));
-			  vec2 n0 = vec2(ProjectionMatrix * ViewMatrix * vec4(vertex[i].normal,1));
-			  vec2 s1 = normalize(vec2(ProjectionMatrix * ViewMatrix * adjPos));
-			  vec2 n1 = normalize(vec2(ProjectionMatrix * ViewMatrix * vec4(vertex[iNextTri].normal,1)));
-			  vec2 p =  normalize(vec2(s0.y - s1.y,s1.x - s0.x));
-			  vec2 m0 = normalize((ProjectionMatrix * ViewMatrix * vec4(V1 + fragNormal,1)).xy- s0);
-			  vec2 m1 = normalize((ProjectionMatrix * ViewMatrix * vec4(adjPos.xyz + adjFragNormal,1)).xy - s1);
+			 // vec2 s0 = vec2(ProjectionMatrix * ViewMatrix * vec4(V1,1));
+			 // vec2 n0 = vec2(ProjectionMatrix * ViewMatrix * vec4(vertex[i].normal,1));
+			 // vec2 s1 = normalize(vec2(ProjectionMatrix * ViewMatrix * adjPos));
+			 // vec2 n1 = normalize(vec2(ProjectionMatrix * ViewMatrix * vec4(vertex[iNextTri].normal,1)));
+			//  vec2 p =  normalize(vec2(s0.y - s1.y,s1.x - s0.x));
+			 // vec2 m0 = normalize((ProjectionMatrix * ViewMatrix * vec4(V1 + fragNormal,1)).xy- s0);
+			//  vec2 m1 = normalize((ProjectionMatrix * ViewMatrix * vec4(adjPos.xyz + adjFragNormal,1)).xy - s1);
 
 			  
-			   gl_Position = vec4(s0 + m0 ,0,1);
-			   VertexOut.edgeFlag = 2;
-			   EmitVertex();
-			   float mySign = sign(dot(m0, p));
-			   vec2 posi0 = s0 + ( p * mySign);
-			   gl_Position = vec4(posi0,0,1);
-			   VertexOut.edgeFlag = 2;
-			   EmitVertex();
-			   gl_Position = vec4(s0,0,1);
-			   VertexOut.edgeFlag = 2;
-			   EmitVertex();
+			 //  gl_Position = vec4(s0 + m0 ,0,1);
+			 //  VertexOut.edgeFlag = 2;
+			 //  EmitVertex();
+			  // float mySign = sign(dot(m0, p));
+			 ////  vec2 posi0 = s0 + ( p * mySign);
+			  // gl_Position = vec4(posi0,0,1);
+			  // VertexOut.edgeFlag = 2;
+			//   EmitVertex();
+			//   gl_Position = vec4(s0,0,1);
+			//   VertexOut.edgeFlag = 2;
+			 //  EmitVertex();
 
-			   EndPrimitive();
+			 //  EndPrimitive();
 
 			  for(int adjv1 = 1 ; adjv1 >= 0; adjv1--)
 			  {
@@ -129,8 +131,8 @@ void main(){
 
 			   //edv2 = adjPos.xyz + adjFragNormal* edgeLenght;
 
-			 
-			   /*gl_Position =  vec4(s1 + m1 * edgeLenght,1,1);
+			
+			  /*gl_Position =  vec4(s1 + m1 * edgeLenght,1,1);
 			   VertexOut.edgeFlag = 2;
 			   EmitVertex();
 			   float mySign1 = sign(dot(m1, p));
@@ -143,6 +145,8 @@ void main(){
 			   EmitVertex();
 			   
 			   EndPrimitive();*/
+			 
+			  
 			}
 		}
 
@@ -150,17 +154,21 @@ void main(){
 
   }
   
-
- /*for (int i = 0; i < 6; i += 2)
- {
-        vec4 fragPos      = ModelMatrix * gl_in[i].gl_Position;
-        VertexOut.normal  = mat3(transpose(inverse(ModelMatrix))) * vertex[i].normal;
-        VertexOut.fragpos = fragPos.xyz;
-		VertexOut.edgeFlag = 0;
-        gl_Position       = ProjectionMatrix * ViewMatrix * fragPos;
-        EmitVertex();
- }
- EndPrimitive();*/
+   if(showModel == 1)
+   {
+   
+    for (int i = 0; i < 6; i += 2)
+	 {
+			vec4 fragPos      = ModelMatrix * gl_in[i].gl_Position;
+			VertexOut.normal  = mat3(transpose(inverse(ModelMatrix))) * vertex[i].normal;
+			VertexOut.fragpos = fragPos.xyz;
+			VertexOut.edgeFlag = 0;
+			gl_Position       = ProjectionMatrix * ViewMatrix * fragPos;
+			EmitVertex();
+	 }
+	 EndPrimitive();
+   }
+ 
 
   
 

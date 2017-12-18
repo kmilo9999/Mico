@@ -15,13 +15,14 @@ Math::~Math()
 
 
 
-mat4& Math::CreateTransformationMatrix(vec3&	translation, quat& orientation, vec3& scaleSize)
+mat4 Math::CreateTransformationMatrix(vec3&	translation, quat& orientation, vec3& scaleSize)
 {
-	mat4 translate, rotate, scale;
-	translate = glm::translate(mat4(), translation);
-	rotate = glm::toMat4(orientation);
-	scale = glm::scale(mat4(), scaleSize);
+	 
+	 mat4 translate = glm::translate(mat4(), translation);
+	 mat4 rotate = toMat4(orientation);
+	 mat4 scale = glm::scale(mat4(), scaleSize);
 	
+
 	return  translate * rotate * scale;
 }
 
@@ -230,7 +231,7 @@ mat4 & Math::InverseTranspose(const mat4 & m)
 	return Inverse;
 }
 
-quat Math::angleAxis(float angle, vec3 axis)
+quat Math::angleAxis(float angle, vec3& axis)
 {
-	return angleAxis(degrees(angle), axis);
+	return glm::angleAxis(angle, axis);
 }

@@ -59,7 +59,7 @@ void GraphicsSystem::Init()
 	lightModelShader.LoadShaders("LightModel.vertexshader", "LightModel.fragmentshader");
 	simpleShader.LoadShaders("Simple.vertexshader", "Simple.fragmentshader");
 	terrainShader.LoadShaders("Terrain.vertexshader", "Terrain.fragmentshader");
-	//NormalRenderShader.LoadShaders("NormalLines.vertexshader", "NormalLines.fragmentshader");
+	//normalRenderShader.LoadShaders("NormalLines.vertexshader", "NormalLines.fragmentshader");
 	normalRenderShader.LoadShaders("NormalLines.vertexshader", "NormalLines.fragmentshader", "NormalLines.geometryshader");
 	shadowShader.LoadShaders("Shadows.vertexshader", "Shadows.fragmentshader");
 	//hatchingShader.LoadShaders("Hatching.vertexshader", "Hatching.fragmentshader");
@@ -188,6 +188,7 @@ void GraphicsSystem::Init()
 	edgeDetectShader.addUniform("material.shininess");
 	edgeDetectShader.addUniform("ViewPos");
 	edgeDetectShader.addUniform("ViewInverse");
+	edgeDetectShader.addUniform("showModel");
 
 	// Load 3D texture
 	vector<string> texturesVector;
@@ -196,8 +197,8 @@ void GraphicsSystem::Init()
 	texturesVector.push_back("../Resources/Textures/hatching/hatching2_3.jpg");
 	texturesVector.push_back("../Resources/Textures/hatching/hatching2_4.jpg");
 	texturesVector.push_back("../Resources/Textures/hatching/hatching2_5.jpg");
-	texturesVector.push_back("../Resources/Textures/hatching/hatching2_6.jpg");
-	*/
+	texturesVector.push_back("../Resources/Textures/hatching/hatching2_6.jpg");*/
+	
 	
 	texturesVector.push_back("../Resources/Textures/new_hatching/hatching7.jpg");
 	texturesVector.push_back("../Resources/Textures/new_hatching/hatching6.jpg");
@@ -239,7 +240,7 @@ void GraphicsSystem::Init()
 
 }
 
-void GraphicsSystem::Update()
+void GraphicsSystem::Update(float dt)
 {
 
 	camera->Update();
@@ -247,7 +248,7 @@ void GraphicsSystem::Update()
 	light->Update();
 	if (terrain)
 	{
-		terrain->Update();
+		//terrain->Update();
 	}
 	
 
@@ -366,6 +367,9 @@ void GraphicsSystem::onNotify(Event & evt)
 		{
 		case Event::ShowNormals:
 			showNormals = evt.ui.value.boolValue;
+			break;
+		case Event::ShowModel:
+			showModel = evt.ui.value.boolValue;
 			break;
 		default:
 			break;
@@ -658,24 +662,24 @@ void GraphicsSystem::HatchingPass()
 		hatchingShader.setUniform("ViewPos", camera->position);
 
 		
-		//if (terrain)
-		//{
-		//	Entity* terrainEntity = dynamic_cast<Entity*>(terrain);
-		//	GraphicsComponent* terrainGraphicsComponent = dynamic_cast<GraphicsComponent*>(terrainEntity->GetComponent("GraphicsComponent"));
+		if (terrain)
+		{
+			Entity* terrainEntity = dynamic_cast<Entity*>(terrain);
+			GraphicsComponent* terrainGraphicsComponent = dynamic_cast<GraphicsComponent*>(terrainEntity->GetComponent("GraphicsComponent"));
 
-		//	//! Fetch the 3D Texture
-		//	hatchingTexture->Bind(0);
-		//	hatchingShader.setUniformi("textureArray", 0);
+			//! Fetch the 3D Texture
+			hatchingTexture->Bind(0);
+			hatchingShader.setUniformi("textureArray", 0);
 
 
-		//	Material* material = terrainGraphicsComponent->GetMaterial();
-		//	hatchingShader.setUniform("material.ambient", ambientColor);
-		//	hatchingShader.setUniform("material.diffuse", material->GetDiffuse());
-		//	hatchingShader.setUniform("material.specular", material->GetSpecular());
-		//	hatchingShader.setUniformf("material.shininess", material->GetShinines());
+			Material* material = terrainGraphicsComponent->GetMaterial();
+			hatchingShader.setUniform("material.ambient", ambientColor);
+			hatchingShader.setUniform("material.diffuse", material->GetDiffuse());
+			hatchingShader.setUniform("material.specular", material->GetSpecular());
+			hatchingShader.setUniformf("material.shininess", material->GetShinines());
 
-		//	terrainGraphicsComponent->Draw(hatchingShader);
-		//}
+			terrainGraphicsComponent->Draw(hatchingShader);
+		}
 	
 
 		vector<Entity*>::iterator it = EntityManager::GetInstance()->GetEntities().begin();
@@ -690,14 +694,14 @@ void GraphicsSystem::HatchingPass()
 				hatchingShader.setUniform("material.diffuse", material->GetDiffuse());
 				hatchingShader.setUniform("material.specular", material->GetSpecular());
 				hatchingShader.setUniformf("material.shininess", material->GetShinines());
-				if(entityGraphicsComponent->GetTexturedModel()->GetId().compare("plane_subdivided2")==0)
+				/*if(entityGraphicsComponent->GetTexturedModel()->GetId().compare("plane_subdivided2")==0)
 				{
 					hatchingShader.setUniformi("isGround",1);
 				}
 				else
 				{
 					hatchingShader.setUniformi("isGround", 0);
-				}
+				}*/
 
 				//! Fetch the 3D Texture
 				hatchingTexture->Bind(0);
@@ -806,6 +810,7 @@ void GraphicsSystem::EdgeDetectionPass()
 		edgeDetectShader.setUniform("light.diffuse", light->GetDiffuse());
 		edgeDetectShader.setUniform("light.specular", light->GetSpecular());	
 		edgeDetectShader.setUniform("ViewPos", camera->position);
+		edgeDetectShader.setUniformi("showModel", showModel);
 
 		mat4 viewM = camera->GetView();
 		mat4x4 WorldInv = affineInverse(viewM);

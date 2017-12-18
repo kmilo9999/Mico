@@ -65,7 +65,7 @@ void UISystem::Init()
 	
 }
 
-void UISystem::Update()
+void UISystem::Update(float dt)
 {
 	// 1. Show a simple window
 	// Tip: if we don't call ImGui::Begin()/ImGui::End() the widgets appears in a window automatically called "Debug"
@@ -80,12 +80,13 @@ void UISystem::Update()
 		evtNormals.ui.type = Event::ShowNormals;
 		evtNormals.ui.value.boolValue = showNormals;
 		notify(evtNormals);
+
 		Event evtChangeModel(Event::UI);
 		evtChangeModel.ui.type = Event::ChangeModel;
 		evtChangeModel.ui.value.modelIndex = item;
 		notify(evtChangeModel);
 
-		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+		//ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 
 
 		/*static int fBright = 4.0f;
@@ -98,7 +99,16 @@ void UISystem::Update()
 		notify(evtBright);
 		ImGui::PopItemWidth();*/
 
-		static float fwcr = 1.0f;
+	/*	ImGui::Checkbox("Hide Model", &showModel);
+		ImGui::SetNextWindowSize(ImVec2(200, 500), ImGuiSetCond_FirstUseEver);
+		Event evtHideModel(Event::UI);
+		evtHideModel.ui.type = Event::ShowModel;
+		evtHideModel.ui.value.boolValue = showModel;
+		notify(evtHideModel);*/
+		
+
+
+		/*static float fwcr = 1.0f;
 		static float fwcg = 0.5f;
 		static float fwcb = 0.31f;
 		ImGui::PushItemWidth(80);
@@ -150,7 +160,7 @@ void UISystem::Update()
 		evtBeta.ui.goochBeta = fbeta;
 		notify(evtBeta);
 		ImGui::PopItemWidth();
-
+*/
 		/*static float f0 = 1.0f;
 		static float f1 = 0.5f;
 		static float f2 = 0.31f;
