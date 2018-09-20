@@ -248,7 +248,7 @@ void GraphicsSystem::Update(float dt)
 	light->Update();
 	if (terrain)
 	{
-		//terrain->Update();
+		terrain->Update();
 	}
 	
 
@@ -259,11 +259,11 @@ void GraphicsSystem::Update(float dt)
 	InitRender();
 	//RenderTextureToQuad(*shadowObjet.shadowFbo());
 
-	//RenderTerrain();
+	RenderTerrain();
 	//LightModelPass();
-	HatchingPass();
+	//HatchingPass();
 	
-	//NewLightModelPass();
+	//NewLightModelPass(); // Adjacent triangles
 	//CelShadingPass();
 	//GoochShadingPass();
 
@@ -275,8 +275,8 @@ void GraphicsSystem::Update(float dt)
 	}
 
 	RenderGlobalLight();
-	/*
-	RenderSelectedVolumen();*/
+	
+	RenderSelectedVolumen();
 
 }
 

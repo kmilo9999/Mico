@@ -1,8 +1,10 @@
 #include "Terrain.h"
 #include <cassert>
 #include "Loader.h"
+#include <iostream>
 
-#define MAX_PIXEL_COLOR 256 * 256 * 256
+#define MAX_PIXEL_COLOR 256 
+
 
 Terrain::Terrain(float x, float z):X(x),Z(z)
 {
@@ -11,7 +13,8 @@ Terrain::Terrain(float x, float z):X(x),Z(z)
 	Texture* texture = new Texture(GL_TEXTURE_2D, "../Resources/Textures/texture_sample.jpg");
 	//Texture* texture = new Texture(GL_TEXTURE_2D, "../Resources/Textures/hatching/hatching_6.jpg");
 	
-	TexturedModel* model = new TexturedModel(GL_TRIANGLES,GenerateTerrain());
+	RawModel* terrainModel = GenerateTerrain();
+	TexturedModel* model = new TexturedModel(GL_TRIANGLES, terrainModel);
 
 	// The terrain is not doing any light calcultations. I just put the  material becasue 
 	// needed to initialize the GraphicsComponent
@@ -65,10 +68,67 @@ void Terrain::Draw(ShaderProgram & shaderProgram)
 	myGraphicsComponent->Draw(shaderProgram);
 }
 
+FIBITMAP* Terrain::GenerateHeightMap(const char * fileName)
+{
+	FREE_IMAGE_FORMAT fif = FIF_UNKNOWN;
+
+	// check the file signature and deduce its format
+	// (the second argument is currently not used by FreeImage)
+	fif = FreeImage_GetFileType(fileName, 0);
+	if (fif == FIF_UNKNOWN) {
+		// no signature ?
+		// try to guess the file format from the file extension
+		fif = FreeImage_GetFIFFromFilename(fileName);
+	}
+	// check that the plugin has reading capabilities ...
+	if ((fif != FIF_UNKNOWN) && FreeImage_FIFSupportsReading(fif)) {
+		// ok, let's load the file
+		FIBITMAP *dib = FreeImage_Load(fif, fileName);
+		// unless a bad file format, we are done !
+		return dib;
+	}
+	return NULL;
+
+}
+
+float Terrain::GetHeight(unsigned int x, unsigned int y, FIBITMAP* bitmap)
+{
+	RGBQUAD color; 
+	if(FreeImage_GetPixelColor(bitmap, x, y, &color))
+	{
+		float c = MAX_HEIGHT * ((color.rgbRed / 255.0f) - 0.5f);
+		return c;
+	}
+	return 0;
+}
+
+vec3  Terrain::calculateNormal(int x, int y, FIBITMAP * img)
+{
+	float heightL = GetHeight(x - 1, y, img);
+	float heightR = GetHeight(x + 1, y, img);
+	float heightD = GetHeight(x , y - 1, img);
+	float heightU = GetHeight(x , y + 1, img);
+	vec3 normal(heightL - heightR, 2.0f, heightD - heightU);
+	normal = normalize(normal);
+	return normal;
+}
+
 
 RawModel* Terrain::GenerateTerrain()
 {
-	int VERTEX_COUNT = 128;
+	FIBITMAP* heighMap = GenerateHeightMap("../Resources/Textures/heightmap.png");
+	unsigned int width = 0;
+	unsigned int height = 0;
+	if (heighMap)
+	{
+		width = FreeImage_GetWidth(heighMap);
+		height = FreeImage_GetHeight(heighMap);
+		//GetHeight(x, y, bitmap);
+		
+	}
+
+
+	int VERTEX_COUNT = 256;
 	int count = VERTEX_COUNT * VERTEX_COUNT;
 	int size3 = count * 3;
 	int size2 = count * 2;
@@ -90,17 +150,22 @@ RawModel* Terrain::GenerateTerrain()
 
 
 			float vx = ((float)halfL / ((float)VERTEX_COUNT - 1)) * TERRAIN_SIZE;
-			float vy = 0; // GetHeight(i, j, heighMap);
+			float vy = 0;
+			if (heighMap)
+			{
+				vy = GetHeight(j, i, heighMap);
+				//std::cout << vy << std::endl;
+			}
 			float vz = ((float)halfW / ((float)VERTEX_COUNT - 1))* TERRAIN_SIZE;
 			vec3 vertex(vx, vy, vz);
 			vVertexData.push_back(vertex);
 			halfL += move;
 
-
-			float nx = 0.0f;
-			float ny = 1.0f;
-			float nz = 0.0f;
-			vec3 normal(vx, vy, vz);
+			vec3 normal = calculateNormal(j, i, heighMap);
+			/*float nx = normal.x;
+			float ny = normal.y;
+			float nz = normal.z;
+			vec3 normal(vx, vy, vz);*/
 			vNormalsData.push_back(normal);
 
 			float uvx = (float)j / ((float)VERTEX_COUNT - 1);
@@ -130,6 +195,10 @@ RawModel* Terrain::GenerateTerrain()
 		}
 	}
 
+	if (heighMap)
+	{
+		FreeImage_Unload(heighMap);
+	}
 
 	return Loader::GetInstance()->LoadToVAO(vVertexData, vCoordsData, vNormalsData, indices);
 }

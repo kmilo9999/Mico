@@ -4,9 +4,10 @@
 #include "ShaderProgram.h"
 #include "Entity.h"
 
-#define TERRAIN_SIZE 40
-#define MAX_HEIGH 40
+#define TERRAIN_SIZE 300
+#define MAX_HEIGHT 40
 
+class FIBITMAP;
 
 class Terrain : public Entity
 {
@@ -22,6 +23,11 @@ public:
 	void BindTextures(GraphicsComponent* graphicsCompnent);
 	void Draw(ShaderProgram& shaderProgram);
 	
+private:
+
+	FIBITMAP* GenerateHeightMap(const char* fileName);
+	float GetHeight(unsigned int x, unsigned int y, FIBITMAP* img);
+	vec3 calculateNormal(int x, int y, FIBITMAP* img);
 
 private:
 
