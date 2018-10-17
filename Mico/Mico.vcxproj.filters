@@ -234,6 +234,9 @@
     <ClCompile Include="ScriptSystem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="GBuffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\lib\glad\include\glad\glad.h">
@@ -449,6 +452,9 @@
     <ClInclude Include="LuaCommon.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="GBuffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="LightModel.fragmentshader">
@@ -530,6 +536,12 @@
       <Filter>shaders</Filter>
     </None>
     <None Include="EdgeDetector.vertexshader">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="gbuffer.fragmentshader">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="gbuffer.vertexshader">
       <Filter>shaders</Filter>
     </None>
   </ItemGroup>

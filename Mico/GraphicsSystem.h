@@ -11,6 +11,8 @@
 #include "ShadowObject.h"
 
 
+
+class GBuffer;
 class GraphicsSystem:public System, public Observer
 {
 public:
@@ -41,6 +43,8 @@ public:
 	// and compute bing phong light calculation
 	void NewLightModelPass();
 
+	void DefferedShadingRender();
+
 	void SetGlobalLight(GlobalLight* light);
 
 	
@@ -65,6 +69,8 @@ private:
 	ShaderProgram celShadingShader;
 	ShaderProgram goochShadingShader;
 	ShaderProgram edgeDetectShader;
+	ShaderProgram gBufferShader;
+
 
 	ShadowObject shadowObjet;
 
@@ -77,6 +83,7 @@ private:
 	Entity* mouseSelectedEntity;
 	Terrain* terrain;
 	Texture* hatchingTexture;
+	GBuffer* gBuffer;
 
 	bool hasSelectedEntity;
 	vec2 lastMousePosition;

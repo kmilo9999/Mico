@@ -1,0 +1,40 @@
+#version 330 core
+
+struct Material {
+    vec3 diffuse;
+    vec3 specular;
+    float shininess;
+}; 
+
+uniform Material material;
+uniform bool useTexture;
+
+uniform sampler2D textureColor;
+
+in vec2 texCoord;
+in vec3 worldVertex;
+in vec3 normalVec;
+
+layout (location = 0) out vec3 WorldPosOut;
+layout (location = 1) out vec3 NormalOut;
+layout (location = 2) out vec3 DiffuseOut;
+layout (location = 3) out vec3 SpecularOut;
+layout (location = 4) out vec3 ShininessOut;  
+layout (location = 5) out vec3 TexCoordOut;
+
+
+void main()
+{
+     vec3 phongDiffuse = vec3(1.0f, 0.5f, 0.31f);
+	 WorldPosOut = worldVertex;
+	 NormalOut = normalVec;
+	 if(useTexture)
+	 {
+		DiffuseOut =  texture2D(textureColor,texCoord).xyz;
+	 }else{
+		DiffuseOut = phongDiffuse;
+	 }
+     SpecularOut = material.specular;
+	 TexCoordOut = vec3(texCoord,0.0); 
+	 ShininessOut = vec3(material.shininess,0,0);
+}

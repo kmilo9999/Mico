@@ -12,6 +12,7 @@
 #include "TransformationComponent.h"
 #include "GraphicsComponent.h"
 #include "FBO.h"
+#include "GBuffer.h"
 
 GraphicsSystem::GraphicsSystem(vec2 windowSize)
 	: mouseSelectedEntity(nullptr)
@@ -31,7 +32,7 @@ GraphicsSystem::~GraphicsSystem()
 	delete light;
 	delete terrain;
 	delete hatchingTexture;
-
+	delete gBuffer;
 }
 
 void GraphicsSystem::Init()
@@ -68,6 +69,8 @@ void GraphicsSystem::Init()
 	celShadingShader.LoadShaders("CelShading.vertexshader", "CelShading.fragmentshader");
 	goochShadingShader.LoadShaders("GoochShading.vertexshader", "GoochShading.fragmentshader");
 	edgeDetectShader.LoadShaders("EdgeDetector.vertexshader", "EdgeDetector.fragmentshader", "EdgeDetector.geometryshader");
+	gBufferShader.LoadShaders("gbuffer.vertexshader","gbuffer.fragmentshader");
+
 
 	lightModelShader.addUniform("ProjectionMatrix");
 	lightModelShader.addUniform("ViewMatrix");
@@ -113,7 +116,22 @@ void GraphicsSystem::Init()
 	shadowShader.addUniform("ModelMatrix");
 
 	renderToQuadShader.LoadShaders("quad.vertexshader", "quad.fragmentshader");
-	renderToQuadShader.addUniform("screenTexture");
+	renderToQuadShader.addUniform("positionMap");
+	renderToQuadShader.addUniform("normalMap");
+	renderToQuadShader.addUniform("textureMap");
+	renderToQuadShader.addUniform("diffuseMap");
+	renderToQuadShader.addUniform("specularMap");
+	renderToQuadShader.addUniform("shininessMap");
+	//renderToQuadShader.addUniform("depthMap");
+	//renderToQuadShader.addUniform("shadowMap");
+	renderToQuadShader.addUniform("light.position");
+	renderToQuadShader.addUniform("light.ambient");
+	renderToQuadShader.addUniform("light.diffuse");
+	renderToQuadShader.addUniform("light.specular");
+	//renderToQuadShader.addUniform("ShadowMatrix");
+	renderToQuadShader.addUniform("ViewPos");
+	renderToQuadShader.addUniform("width");
+	renderToQuadShader.addUniform("height");
 
 
 	hatchingShader.addUniform("ProjectionMatrix");
@@ -190,6 +208,19 @@ void GraphicsSystem::Init()
 	edgeDetectShader.addUniform("ViewInverse");
 	edgeDetectShader.addUniform("showModel");
 
+	gBuffer = new GBuffer();
+	gBuffer->CreateGBuffer(windowSize.x,windowSize.y);
+
+	gBufferShader.addUniform("ProjectionMatrix");
+	gBufferShader.addUniform("ViewMatrix");
+	gBufferShader.addUniform("ModelMatrix");
+	gBufferShader.addUniform("useTexture");
+	gBufferShader.addUniform("material.diffuse");
+	gBufferShader.addUniform("material.specular");
+	gBufferShader.addUniform("material.shininess");
+	
+
+
 	// Load 3D texture
 	vector<string> texturesVector;
 	/*texturesVector.push_back("../Resources/Textures/hatching/hatching2_1.jpg");
@@ -213,6 +244,9 @@ void GraphicsSystem::Init()
 	
 
 	hatchingTexture = new Texture(GL_TEXTURE_2D_ARRAY, texturesVector);
+
+
+	
 
 	/* Render to quad init*/
 
@@ -259,8 +293,9 @@ void GraphicsSystem::Update(float dt)
 	InitRender();
 	//RenderTextureToQuad(*shadowObjet.shadowFbo());
 
-	RenderTerrain();
+	//RenderTerrain();
 	//LightModelPass();
+	DefferedShadingRender();
 	//HatchingPass();
 	
 	//NewLightModelPass(); // Adjacent triangles
@@ -269,14 +304,14 @@ void GraphicsSystem::Update(float dt)
 
 	//EdgeDetectionPass();
 
-	if (showNormals)
+	/*if (showNormals)
 	{
 		RenderNormals();
-	}
+	}*/
 
-	RenderGlobalLight();
+	//RenderGlobalLight();
 	
-	RenderSelectedVolumen();
+	//RenderSelectedVolumen();
 
 }
 
@@ -390,8 +425,8 @@ void GraphicsSystem::InitRender()
 	//glCullFace(GL_BACK);
 	glViewport(0, 0, windowSize.x, windowSize.y);
 
-	//glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
-	glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
+	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	//glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -597,7 +632,8 @@ void GraphicsSystem::ShadowPass()
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	glViewport(0, 0, 1024, 1024);
+	//glViewport(0, 0, 1024, 1024);
+	glViewport(0, 0, windowSize.x, windowSize.y);
 
 
 	vec3 up = vec3(0.0, 1.0, 0.0);
@@ -605,7 +641,8 @@ void GraphicsSystem::ShadowPass()
 
 	float near_plane = 0.1f, far_plane = 10000.0f;
 	float lh = 0.6f*near_plane;
-	float lw = lh * 1024 / 1024;
+	//float lw = lh * 1024 / 1024;
+	float lw = lh * windowSize.x / windowSize.y;
 	glm::mat4 lightProjection = frustum(-lw, lw, -lh, lh, near_plane, far_plane);
 
 	mat4x4 lightPOV = lookAt(lightTransform->GetPosition(), vec3(0, 0, 0), up);
@@ -946,6 +983,144 @@ void GraphicsSystem::NewLightModelPass()
 		}
 		newLightModelShader.stop();
 	}
+}
+
+void GraphicsSystem::DefferedShadingRender()
+{
+	ShadowPass();
+
+	// Geometry pass
+	gBuffer->BindForWriting();
+	glClearColor(0.0, 0.0, 0.0, 1.0);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glDepthMask(GL_TRUE);
+	glEnable(GL_DEPTH_TEST);
+	glDisable(GL_BLEND);
+
+
+	gBufferShader.start();
+
+
+	gBufferShader.setUniform("ProjectionMatrix", projection);
+	gBufferShader.setUniform("ViewMatrix", camera->GetView());
+
+	if (terrain)
+	{
+		Entity* terrainEntity = dynamic_cast<Entity*>(terrain);
+		GraphicsComponent* terrainGraphicsComponent = dynamic_cast<GraphicsComponent*>(terrainEntity->GetComponent("GraphicsComponent"));
+
+		Material* material = terrainGraphicsComponent->GetMaterial();
+		gBufferShader.setUniformi("useTexture", material->GetTextures().size() > 0 ? 1 : 0);
+		//lightModelShader.setUniform("material.ambient", ambientColor);
+		//lightModelShader.setUniform("material.diffuse", material->GetDiffuse());
+		gBufferShader.setUniform("material.specular", material->GetSpecular());
+		gBufferShader.setUniformf("material.shininess", material->GetShinines());
+
+		terrainGraphicsComponent->bindModelTextures();
+		terrainGraphicsComponent->Draw(gBufferShader);
+	}
+
+	vector<Entity*>::iterator it = EntityManager::GetInstance()->GetEntities().begin();
+	vector<Entity*>::iterator end = EntityManager::GetInstance()->GetEntities().end();
+	for (; it != end; ++it)
+	{
+
+		GraphicsComponent* graphicsComponent = dynamic_cast<GraphicsComponent*>((*it)->GetComponent("GraphicsComponent"));
+		if (graphicsComponent)
+		{
+			Material* material = graphicsComponent->GetMaterial();
+			gBufferShader.setUniformi("useTexture", material->GetTextures().size() > 0 ? 1 : 0);
+			//gBufferShader.setUniform("material.ambient", ambientColor);
+			//gBufferShader.setUniform("material.diffuse", material->GetDiffuse());
+			gBufferShader.setUniform("material.specular", material->GetSpecular());
+			gBufferShader.setUniformf("material.shininess", material->GetShinines());
+			graphicsComponent->Draw(gBufferShader);
+		}
+	}
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	gBufferShader.stop();
+
+
+	//add shadow
+	mat4x4 trans = translate(mat4(), vec3(0.5f, 0.5f, 0.5f));
+	mat4x4 sca = scale(mat4(), vec3(0.5f, 0.5f, 0.5f));
+	mat4x4 B = trans*sca;
+
+	TransformationComponent* lightTransform = dynamic_cast<TransformationComponent*>(light->GetComponent("TransformationComponent"));
+
+	mat4& viewMatrixLightPOV = glm::lookAt(lightTransform->GetPosition(), vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
+	mat4x4 shadowMatrix = B*shadowObjet.shadowProjectionMatrix() * viewMatrixLightPOV;
+
+
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	renderToQuadShader.start();
+	glEnable(GL_BLEND);
+	glBlendEquation(GL_FUNC_ADD);
+	glBlendFunc(GL_ONE, GL_ONE);
+
+	glBindVertexArray(VAO);
+	glDisable(GL_DEPTH_TEST);
+	
+	if (lightTransform)
+	{
+		renderToQuadShader.setUniform("ViewPos", camera->position);
+		//renderToQuadShader.setUniformi("isGround", 0);
+		renderToQuadShader.setUniform("ShadowMatrix", shadowMatrix);
+
+		renderToQuadShader.setUniform("ambient", ambientColor);
+
+		renderToQuadShader.setUniform("light.position", lightTransform->GetPosition());
+		renderToQuadShader.setUniform("light.ambient", light->GetAmbient());
+		renderToQuadShader.setUniform("light.diffuse", light->GetDiffuse());
+		renderToQuadShader.setUniform("light.specular", light->GetSpecular());
+		renderToQuadShader.setUniformf("width", windowSize.x);
+		renderToQuadShader.setUniformf("height", windowSize.y);
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, gBuffer->GetTextureUnit(GBuffer::GBUFFER_TEXTURE_TYPE_POSITION));
+		renderToQuadShader.setUniformi("positionMap", GBuffer::GBUFFER_TEXTURE_TYPE_POSITION);
+
+		glActiveTexture(GL_TEXTURE0 + GBuffer::GBUFFER_TEXTURE_TYPE_NORMAL);
+		glBindTexture(GL_TEXTURE_2D, gBuffer->GetTextureUnit(GBuffer::GBUFFER_TEXTURE_TYPE_NORMAL));
+		renderToQuadShader.setUniformi("normalMap", GBuffer::GBUFFER_TEXTURE_TYPE_NORMAL);
+
+		glActiveTexture(GL_TEXTURE0 + GBuffer::GBUFFER_TEXTURE_TYPE_DIFFUSE);
+		glBindTexture(GL_TEXTURE_2D, gBuffer->GetTextureUnit(GBuffer::GBUFFER_TEXTURE_TYPE_DIFFUSE));
+		renderToQuadShader.setUniformi("diffuseMap", GBuffer::GBUFFER_TEXTURE_TYPE_DIFFUSE);
+
+		glActiveTexture(GL_TEXTURE0 + GBuffer::GBUFFER_TEXTURE_TYPE_SPECULAR);
+		glBindTexture(GL_TEXTURE_2D, gBuffer->GetTextureUnit(GBuffer::GBUFFER_TEXTURE_TYPE_SPECULAR));
+		renderToQuadShader.setUniformi("specularMap", GBuffer::GBUFFER_TEXTURE_TYPE_SPECULAR);
+
+		glActiveTexture(GL_TEXTURE0 + GBuffer::GBUFFER_TEXTURE_TYPE_SHININESMAP);
+		glBindTexture(GL_TEXTURE_2D, gBuffer->GetTextureUnit(GBuffer::GBUFFER_TEXTURE_TYPE_SHININESMAP));
+		renderToQuadShader.setUniformi("shininessMap", GBuffer::GBUFFER_TEXTURE_TYPE_SHININESMAP);
+
+		glActiveTexture(GL_TEXTURE0 + GBuffer::GBUFFER_TEXTURE_TYPE_TEXCOORD);
+		glBindTexture(GL_TEXTURE_2D, gBuffer->GetTextureUnit(GBuffer::GBUFFER_TEXTURE_TYPE_TEXCOORD));
+		renderToQuadShader.setUniformi("textureMap", GBuffer::GBUFFER_TEXTURE_TYPE_TEXCOORD);
+
+		glActiveTexture(GL_TEXTURE0 + GBuffer::GBUFFER_NUM_TEXTURES);
+		glBindTexture(GL_TEXTURE_2D, shadowObjet.shadowFbo()->texture);
+		renderToQuadShader.setUniformi("shadowMap", GBuffer::GBUFFER_NUM_TEXTURES);
+
+		/*glActiveTexture(GL_TEXTURE0 + GBuffer::GBUFFER_NUM_TEXTURES + 1);
+		glBindTexture(GL_TEXTURE_2D, gBuffer->GetDepthTexture());
+		renderToQuadShader.setUniformi("depthMap", GBuffer::GBUFFER_NUM_TEXTURES);*/
+
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+		renderToQuadShader.stop();
+
+		glDepthMask(GL_TRUE);
+		glEnable(GL_DEPTH_TEST);
+		glEnable(GL_BLEND);
+		glBlendEquation(GL_FUNC_ADD);
+		glBlendFunc(GL_ONE, GL_ZERO);
+	}
+
+	
+	
 }
 
 void GraphicsSystem::SetGlobalLight(GlobalLight* light)

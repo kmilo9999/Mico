@@ -150,18 +150,16 @@ RawModel* Terrain::GenerateTerrain()
 
 
 			float vx = ((float)halfL / ((float)VERTEX_COUNT - 1)) * TERRAIN_SIZE;
+			//float vy = !heighMap ? GetHeight(j, i, heighMap):0;
 			float vy = 0;
-			if (heighMap)
-			{
-				vy = GetHeight(j, i, heighMap);
-				//std::cout << vy << std::endl;
-			}
+			
 			float vz = ((float)halfW / ((float)VERTEX_COUNT - 1))* TERRAIN_SIZE;
 			vec3 vertex(vx, vy, vz);
 			vVertexData.push_back(vertex);
 			halfL += move;
 
-			vec3 normal = calculateNormal(j, i, heighMap);
+			//vec3 normal = calculateNormal(j, i, heighMap);
+			vec3 normal = vec3(0.0f, 1.0f, 0.0f);
 			/*float nx = normal.x;
 			float ny = normal.y;
 			float nz = normal.z;
