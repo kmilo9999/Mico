@@ -35,18 +35,17 @@ out vec4 fragColor;
 bool ShadowCalculation(vec3 position)
 {
 	vec4 shadowCoord = ShadowMatrix * vec4(position,1);
-	vec2 shadowIndex = shadowCoord.xy/shadowCoord.z;
-	float lightDepth = 0.0;
-	float pixelDepth = 0.0;
-	if( (shadowCoord.z > 0.0) && ( (shadowIndex.x > 0.0 && shadowIndex.x < 1.0) && (shadowIndex.y > 0.0 && shadowIndex.y < 1.0) ) ){
-		lightDepth = texture(shadowMap, shadowIndex).w;
-		pixelDepth = shadowCoord.z;
-		if(pixelDepth  > lightDepth){
-			return true;
-		}
+	vec2 shadowIndex = shadowCoord.xy/shadowCoord.w;
+	bool shadow = false;
+	if( (shadowCoord.w > 0.0) && ( (shadowIndex.x > 0.0 && shadowIndex.x < 1.0) && (shadowIndex.y > 0.0 && shadowIndex.y < 1.0) ) ){
+	    float lightDepth = texture(shadowMap, shadowIndex).w;
+	    float pixelDepth = shadowCoord.w;
+		float bias = 0.005;
+	    shadow = pixelDepth - lightDepth > bias  ? true : false;
 	}
+	 
 
-	return false;
+	return shadow;
 }
 
 

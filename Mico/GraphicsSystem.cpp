@@ -107,7 +107,8 @@ void GraphicsSystem::Init()
 	normalRenderShader.addUniform("ViewInverse");
 
 	Fbo* shadowframeBuffer = new Fbo();
-	shadowframeBuffer->CreateFBO(1024, 1024);
+	//shadowframeBuffer->CreateFBO(1024, 1024);
+	shadowframeBuffer->CreateFBO(windowSize.x, windowSize.y);
 
 	shadowObjet.setShadowFbo(shadowframeBuffer);
 
@@ -123,12 +124,12 @@ void GraphicsSystem::Init()
 	renderToQuadShader.addUniform("specularMap");
 	renderToQuadShader.addUniform("shininessMap");
 	//renderToQuadShader.addUniform("depthMap");
-	//renderToQuadShader.addUniform("shadowMap");
+	renderToQuadShader.addUniform("shadowMap");
 	renderToQuadShader.addUniform("light.position");
 	renderToQuadShader.addUniform("light.ambient");
 	renderToQuadShader.addUniform("light.diffuse");
 	renderToQuadShader.addUniform("light.specular");
-	//renderToQuadShader.addUniform("ShadowMatrix");
+	renderToQuadShader.addUniform("ShadowMatrix");
 	renderToQuadShader.addUniform("ViewPos");
 	renderToQuadShader.addUniform("width");
 	renderToQuadShader.addUniform("height");
