@@ -25,7 +25,7 @@ Terrain::Terrain(float x, float z):X(x),Z(z)
 	material->AddTexture(texture);
 
 	TransformationComponent* transformation = 
-		new TransformationComponent(vec3(X, 9.5, Z),quat(),vec3(1.0f, 1.0f, 1.0f));
+		new TransformationComponent(vec3(X, 0, Z),quat(),vec3(1.0f, 1.0f, 1.0f));
 	AddComponent(transformation);
 
 	GraphicsComponent* myGraphicsComponent = new GraphicsComponent(model, material);

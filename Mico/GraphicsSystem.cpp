@@ -41,7 +41,7 @@ void GraphicsSystem::Init()
 	{
 		glfwTerminate();
 		getchar();
-		assert(false && "Failed to Initlialize Opengl");
+		assert(false && "Failed to Initialize OpenGL");
 	}
 
 	int major = 0;
@@ -53,7 +53,7 @@ void GraphicsSystem::Init()
 	cout << "OpenGL major version: " << major << endl;
 
 	window = WINDOWSYSTEM->GetWindow();
-	camera = new Camera(vec3(0, 12, 8), vec3(0, 0, -1));
+	camera = new Camera(vec3(0, 1, 8), vec3(0, 0, -1));
 	InputHandler::GetInstance()->addObserver(camera);
 	InputHandler::GetInstance()->addObserver(this);
 
@@ -442,7 +442,7 @@ void GraphicsSystem::InitScene()
 	light->SetSpecular(vec3(1.0f));
 
 	TransformationComponent* lightTransformation =
-		new TransformationComponent(vec3(1.0f, 15.0f, 5.3f), quat(), vec3(0.3f, 0.3f, 0.3f));
+		new TransformationComponent(vec3(0.0f, 10.5f, 10.3f), quat(), vec3(0.3f, 0.3f, 0.3f));
 	light->AddComponent(lightTransformation);
 
 	Texture* targetTtexture = new Texture(GL_TEXTURE_2D, "../Resources/Textures/texture_sample.jpg");
@@ -646,7 +646,7 @@ void GraphicsSystem::ShadowPass()
 	float lw = lh * windowSize.x / windowSize.y;
 	glm::mat4 lightProjection = frustum(-lw, lw, -lh, lh, near_plane, far_plane);
 
-	mat4x4 lightPOV = lookAt(lightTransform->GetPosition(), vec3(0, 0, 0), up);
+	mat4x4 lightPOV = lookAt(lightTransform->GetPosition(), vec3(0, 0.0f, 0.0f), up);
 	shadowShader.setUniform("ViewMatrix", lightPOV);
 	shadowShader.setUniform("ProjectionMatrix", lightProjection);
 
