@@ -176,7 +176,9 @@ void EntityManager::Initialize()
 {
 	
 	//Initialize center model
-	CreateEntity("arc", vec3(0.0f, 0.0f, 1.8f), quat(), vec3(1.0f, 1.0f, 1.0f), GL_TRIANGLES);
+	CreateEntity("arc", vec3(2.0f, 0.0f, 1.8f), quat(), vec3(1.0f, 1.0f, 1.0f), GL_TRIANGLES);
+	CreateEntity("arc", vec3(-1.0f, 0.0f, 1.8f), quat(), vec3(1.0f, 1.0f, 1.0f), GL_TRIANGLES);
+	CreateEntity("arc", vec3(-4.0f, 0.0f, 1.8f), quat(), vec3(1.0f, 1.0f, 1.0f), GL_TRIANGLES);
 	//CreateEntity("bunny", vec3(0.0f, 11.0f, 3.0f), quat(), vec3(1.0f, 1.0f, 1.0f), GL_TRIANGLES_ADJACENCY);
 	myCenterModelId = "teapot";
 

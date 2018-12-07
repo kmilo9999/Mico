@@ -544,5 +544,11 @@
     <None Include="gbuffer.vertexshader">
       <Filter>shaders</Filter>
     </None>
+    <None Include="volumetric_light.fragmentshader">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="volumetric_light.vertexshader">
+      <Filter>shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

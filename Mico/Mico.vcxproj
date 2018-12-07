@@ -327,6 +327,8 @@
     <None Include="Simple.vertexshader" />
     <None Include="Terrain.fragmentshader" />
     <None Include="Terrain.vertexshader" />
+    <None Include="volumetric_light.fragmentshader" />
+    <None Include="volumetric_light.vertexshader" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

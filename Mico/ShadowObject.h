@@ -1,9 +1,10 @@
 #pragma once
 #include <glm\glm.hpp>
-#include "FBO.h"
+
 
 using namespace glm;
 
+class Fbo;
 class ShadowObject
 {
 

@@ -13,6 +13,7 @@
 
 
 class GBuffer;
+class FBO;
 class GraphicsSystem:public System, public Observer
 {
 public:
@@ -55,7 +56,8 @@ private:
 	bool RayPlaneIntersection(vec3 plane,  vec3 rayStart, vec3 rayDirection);
 	void RenderTextureToQuad(Fbo& frameBuffer);
 
-	vec2 windowSize;
+	vec2 windowSize
+		;
 	Camera* camera;
 	Renderer* renderer;
 	ShaderProgram lightModelShader;
@@ -70,9 +72,11 @@ private:
 	ShaderProgram goochShadingShader;
 	ShaderProgram edgeDetectShader;
 	ShaderProgram gBufferShader;
+	ShaderProgram volumetricLightShader;
 
 
 	ShadowObject shadowObjet;
+	Fbo* myVolumetricFbo;
 
 
 	GLFWwindow* window;

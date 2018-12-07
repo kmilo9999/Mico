@@ -1,4 +1,5 @@
 #include "ShadowObject.h"
+#include "FBO.h"
 
 ShadowObject::ShadowObject()
 {

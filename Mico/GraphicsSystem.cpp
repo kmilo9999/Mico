@@ -14,6 +14,10 @@
 #include "FBO.h"
 #include "GBuffer.h"
 
+
+#define LIGHT_PASS 1
+#define VOL_LIGHT 0
+
 GraphicsSystem::GraphicsSystem(vec2 windowSize)
 	: mouseSelectedEntity(nullptr)
 	, hasSelectedEntity(false)
@@ -33,6 +37,7 @@ GraphicsSystem::~GraphicsSystem()
 	delete terrain;
 	delete hatchingTexture;
 	delete gBuffer;
+	delete myVolumetricFbo;
 }
 
 void GraphicsSystem::Init()
@@ -70,7 +75,8 @@ void GraphicsSystem::Init()
 	goochShadingShader.LoadShaders("GoochShading.vertexshader", "GoochShading.fragmentshader");
 	edgeDetectShader.LoadShaders("EdgeDetector.vertexshader", "EdgeDetector.fragmentshader", "EdgeDetector.geometryshader");
 	gBufferShader.LoadShaders("gbuffer.vertexshader","gbuffer.fragmentshader");
-
+	renderToQuadShader.LoadShaders("quad.vertexshader", "quad.fragmentshader");
+	volumetricLightShader.LoadShaders("volumetric_light.vertexshader", "volumetric_light.fragmentshader");
 
 	lightModelShader.addUniform("ProjectionMatrix");
 	lightModelShader.addUniform("ViewMatrix");
@@ -110,13 +116,16 @@ void GraphicsSystem::Init()
 	//shadowframeBuffer->CreateFBO(1024, 1024);
 	shadowframeBuffer->CreateFBO(windowSize.x, windowSize.y);
 
+	myVolumetricFbo = new Fbo();
+	myVolumetricFbo->CreateFBO(windowSize.x, windowSize.y);
+
 	shadowObjet.setShadowFbo(shadowframeBuffer);
 
 	shadowShader.addUniform("ProjectionMatrix");
 	shadowShader.addUniform("ViewMatrix");
 	shadowShader.addUniform("ModelMatrix");
 
-	renderToQuadShader.LoadShaders("quad.vertexshader", "quad.fragmentshader");
+	
 	renderToQuadShader.addUniform("positionMap");
 	renderToQuadShader.addUniform("normalMap");
 	renderToQuadShader.addUniform("textureMap");
@@ -125,6 +134,7 @@ void GraphicsSystem::Init()
 	renderToQuadShader.addUniform("shininessMap");
 	//renderToQuadShader.addUniform("depthMap");
 	renderToQuadShader.addUniform("shadowMap");
+	renderToQuadShader.addUniform("volumetricLightMap");
 	renderToQuadShader.addUniform("light.position");
 	renderToQuadShader.addUniform("light.ambient");
 	renderToQuadShader.addUniform("light.diffuse");
@@ -220,6 +230,16 @@ void GraphicsSystem::Init()
 	gBufferShader.addUniform("material.specular");
 	gBufferShader.addUniform("material.shininess");
 	
+	volumetricLightShader.addUniform("positionMap");
+	volumetricLightShader.addUniform("shadowMap");
+	volumetricLightShader.addUniform("light.position");
+	volumetricLightShader.addUniform("light.ambient");
+	volumetricLightShader.addUniform("light.diffuse");
+	volumetricLightShader.addUniform("light.specular");
+	volumetricLightShader.addUniform("ShadowMatrix");
+	volumetricLightShader.addUniform("ViewPos");
+	volumetricLightShader.addUniform("width");
+	volumetricLightShader.addUniform("height");
 
 
 	// Load 3D texture
@@ -438,7 +458,7 @@ void GraphicsSystem::InitScene()
 	light = new GlobalLight();
 
 	light->SetAmbient(vec3(0.5f));
-	light->SetDiffuse(vec3(0.5));
+	light->SetDiffuse(vec3(0.85f));
 	light->SetSpecular(vec3(1.0f));
 
 	TransformationComponent* lightTransformation =
@@ -988,8 +1008,10 @@ void GraphicsSystem::NewLightModelPass()
 
 void GraphicsSystem::DefferedShadingRender()
 {
+	//-------------------------------------------------------------
 	ShadowPass();
-
+	
+	//-------------------------------------------------------------
 	// Geometry pass
 	gBuffer->BindForWriting();
 	glClearColor(0.0, 0.0, 0.0, 1.0);
@@ -1043,7 +1065,9 @@ void GraphicsSystem::DefferedShadingRender()
 	gBufferShader.stop();
 
 
-	//add shadow
+	//------------------------------------------------------------
+	// SHADOW MATRIX DEFINITION
+
 	mat4x4 trans = translate(mat4(), vec3(0.5f, 0.5f, 0.5f));
 	mat4x4 sca = scale(mat4(), vec3(0.5f, 0.5f, 0.5f));
 	mat4x4 B = trans*sca;
@@ -1054,6 +1078,64 @@ void GraphicsSystem::DefferedShadingRender()
 	mat4x4 shadowMatrix = B*shadowObjet.shadowProjectionMatrix() * viewMatrixLightPOV;
 
 
+
+	//--------------------------------------------------------------.
+	// Volumetric Light
+#if VOL_LIGHT
+
+	
+	myVolumetricFbo->Bind();
+	volumetricLightShader.start();
+	glBindVertexArray(VAO);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glEnable(GL_DEPTH_TEST);
+
+	if (lightTransform)
+	{
+		volumetricLightShader.setUniform("ViewPos", camera->position);
+		volumetricLightShader.setUniform("ShadowMatrix", shadowMatrix);
+
+		volumetricLightShader.setUniform("light.position", lightTransform->GetPosition());
+		volumetricLightShader.setUniform("light.ambient", light->GetAmbient());
+		volumetricLightShader.setUniform("light.diffuse", light->GetDiffuse());
+		volumetricLightShader.setUniform("light.specular", light->GetSpecular());
+		volumetricLightShader.setUniformf("width", windowSize.x);
+		volumetricLightShader.setUniformf("height", windowSize.y);
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, gBuffer->GetTextureUnit(GBuffer::GBUFFER_TEXTURE_TYPE_POSITION));
+		volumetricLightShader.setUniformi("positionMap", GBuffer::GBUFFER_TEXTURE_TYPE_POSITION);
+
+		glActiveTexture(GL_TEXTURE0 + GBuffer::GBUFFER_NUM_TEXTURES);
+		glBindTexture(GL_TEXTURE_2D, shadowObjet.shadowFbo()->texture);
+		volumetricLightShader.setUniformi("shadowMap", GBuffer::GBUFFER_NUM_TEXTURES);
+
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+
+	}
+
+	volumetricLightShader.stop();
+	myVolumetricFbo->Unbind();
+	glBindVertexArray(0);
+	
+
+#endif
+
+#if LIGHT_PASS
+	//-------------------------------------------------------------
+	// Light  Pass
+	
+	//add shadow
+	/*mat4x4 trans = translate(mat4(), vec3(0.5f, 0.5f, 0.5f));
+	mat4x4 sca = scale(mat4(), vec3(0.5f, 0.5f, 0.5f));
+	mat4x4 B = trans*sca;
+
+	TransformationComponent* lightTransform = dynamic_cast<TransformationComponent*>(light->GetComponent("TransformationComponent"));
+
+	mat4& viewMatrixLightPOV = glm::lookAt(lightTransform->GetPosition(), vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f));
+	mat4x4 shadowMatrix = B*shadowObjet.shadowProjectionMatrix() * viewMatrixLightPOV;*/
+
+	
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	renderToQuadShader.start();
 	glEnable(GL_BLEND);
@@ -1066,7 +1148,6 @@ void GraphicsSystem::DefferedShadingRender()
 	if (lightTransform)
 	{
 		renderToQuadShader.setUniform("ViewPos", camera->position);
-		//renderToQuadShader.setUniformi("isGround", 0);
 		renderToQuadShader.setUniform("ShadowMatrix", shadowMatrix);
 
 		renderToQuadShader.setUniform("ambient", ambientColor);
@@ -1107,21 +1188,30 @@ void GraphicsSystem::DefferedShadingRender()
 		renderToQuadShader.setUniformi("shadowMap", GBuffer::GBUFFER_NUM_TEXTURES);
 
 		/*glActiveTexture(GL_TEXTURE0 + GBuffer::GBUFFER_NUM_TEXTURES + 1);
-		glBindTexture(GL_TEXTURE_2D, gBuffer->GetDepthTexture());
-		renderToQuadShader.setUniformi("depthMap", GBuffer::GBUFFER_NUM_TEXTURES);*/
+		glBindTexture(GL_TEXTURE_2D, myVolumetricFbo->texture);
+		renderToQuadShader.setUniformi("volumetricLightMap", GBuffer::GBUFFER_NUM_TEXTURES + 1);*/
+
+		//glActiveTexture(GL_TEXTURE0 + GBuffer::GBUFFER_NUM_TEXTURES + 1);
+		//glBindTexture(GL_TEXTURE_2D, gBuffer->GetDepthTexture());
+		//renderToQuadShader.setUniformi("depthMap", GBuffer::GBUFFER_NUM_TEXTURES);
 
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 		renderToQuadShader.stop();
-
-		glDepthMask(GL_TRUE);
-		glEnable(GL_DEPTH_TEST);
-		glEnable(GL_BLEND);
-		glBlendEquation(GL_FUNC_ADD);
-		glBlendFunc(GL_ONE, GL_ZERO);
+		
 	}
 
+	glBindVertexArray(0);
+	glDepthMask(GL_TRUE);
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_BLEND);
+	glBlendEquation(GL_FUNC_ADD);
+	glBlendFunc(GL_ONE, GL_ZERO);
+#endif
+	//-------------------------------------------------------------
 	
-	
+
+
+
 }
 
 void GraphicsSystem::SetGlobalLight(GlobalLight* light)

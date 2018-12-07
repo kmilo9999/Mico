@@ -4,7 +4,7 @@
 #include "ShaderProgram.h"
 #include "Entity.h"
 
-#define TERRAIN_SIZE 40
+#define TERRAIN_SIZE 60
 #define MAX_HEIGHT 40
 
 class FIBITMAP;
